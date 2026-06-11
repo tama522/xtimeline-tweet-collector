@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XTimeline - Tweet Search</title>
+  <link rel="stylesheet" href="search.css">
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="header-left">
+        <h1>🔍 XTimeline Search</h1>
+        <span class="stats" id="stats"></span>
+      </div>
+      <div class="header-right">
+        <button id="btnExportJSON" class="btn btn-sm">JSON</button>
+        <button id="btnExportCSV" class="btn btn-sm">CSV</button>
+        <a href="../options/options.html" class="btn btn-sm">⚙️</a>
+      </div>
+    </header>
+
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="ツイートを検索..." autofocus>
+      <select id="viewedAsFilter">
+        <option value="">全アカウント</option>
+      </select>
+      <select id="userFilter">
+        <option value="">全ユーザー</option>
+      </select>
+      <button id="btnSearch" class="btn btn-primary">検索</button>
+    </div>
+
+    <div class="results-info" id="resultsInfo"></div>
+
+    <div class="tweet-list" id="tweetList">
+      <div class="empty-state">
+        <p>🔍 検索キーワードを入力するか、最新のツイートを表示します</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../lib/db.js"></script>
+  <script src="search.js"></script>
+</body>
+</html>

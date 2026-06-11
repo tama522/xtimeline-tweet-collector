@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 320px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #15202b;
+      color: #e7e9ea;
+      padding: 12px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .header h1 { font-size: 16px; font-weight: 700; }
+    .badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .badge.on { background: #00ba7c; color: #fff; }
+    .badge.off { background: #67070f; color: #f4212e; }
+
+    .account-info {
+      background: #192734;
+      border: 1px solid #38444d;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+    .account-info .label { color: #8899a6; }
+    .account-info .name { color: #1d9bf0; font-weight: 600; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .stat-card {
+      background: #192734;
+      border: 1px solid #38444d;
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+    }
+    .stat-value { font-size: 20px; font-weight: 700; color: #1d9bf0; }
+    .stat-label { font-size: 11px; color: #8899a6; margin-top: 2px; }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .btn {
+      padding: 8px 12px;
+      border: 1px solid #38444d;
+      border-radius: 20px;
+      background: transparent;
+      color: #e7e9ea;
+      font-size: 13px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .btn:hover { background: #1d2d3d; }
+    .btn-primary { background: #1d9bf0; border-color: #1d9bf0; color: #fff; font-weight: 600; }
+    .btn-primary:hover { background: #1a8cd8; }
+    .btn-stop { background: #67070f; border-color: #f4212e; color: #f4212e; }
+
+    .links {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      padding-top: 8px;
+      border-top: 1px solid #38444d;
+    }
+    .links a {
+      font-size: 12px;
+      color: #1d9bf0;
+      text-decoration: none;
+    }
+    .links a:hover { text-decoration: underline; }
+
+    .method-tag {
+      font-size: 10px;
+      color: #00ba7c;
+      background: rgba(0, 186, 124, 0.1);
+      padding: 1px 6px;
+      border-radius: 6px;
+      margin-left: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🔍 XTimeline</h1>
+    <span class="badge" id="statusBadge">-</span>
+  </div>
+
+  <div class="account-info">
+    <span class="label">閲覧中:</span>
+    <span class="name" id="viewingAccount">-</span>
+    <span class="method-tag">GraphQL</span>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value" id="savedCount">-</div>
+      <div class="stat-label">保存済み</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="sessionCount">-</div>
+      <div class="stat-label">本セッション</div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" id="btnToggle">キャプチャを停止</button>
+    <button class="btn" id="btnSearch">🔍 検索ページを開く</button>
+  </div>
+
+  <div class="links">
+    <a href="#" id="btnExportJSON">JSON</a>
+    <a href="#" id="btnExportCSV">CSV</a>
+    <a href="../options/options.html" target="_blank">設定</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
