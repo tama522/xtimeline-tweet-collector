@@ -2,7 +2,8 @@
   "manifest_version": 3,
   "name": "XTimeline Tweet Collector",
   "version": "3.0.0",
-  "description": "X/Twitter GraphQL responsesを横取りしてツイートを自動収集・検索・エクスポート",
+  "description": "X/Twitterのタイムラインツイートを自動キャプチャ。GraphQLレスポンスを横取りしてローカルIndexedDBに保存。全文検索・エクスポート対応。",
+  "author": "tama522",
 
   "permissions": [
     "storage",
@@ -55,6 +56,8 @@
     "48": "assets/icons/icon48.png",
     "128": "assets/icons/icon128.png"
   },
+
+  "homepage_url": "https://github.com/tama522/xtimeline-tweet-collector",
 
   "web_accessible_resources": [],
 

@@ -1,0 +1,38 @@
+{
+  "name": "xtimeline-widget-saas",
+  "version": "2.0.0",
+  "description": "XTimeline SaaS Widget API - マルチテナント対応ツイート埋め込みWidget",
+  "main": "widget_api_saas.js",
+  "scripts": {
+    "start": "node widget_api_saas.js",
+    "dev": "node widget_api_saas.js",
+    "test": "echo \"Widget API tests\" && exit 0"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.10.0",
+    "express-slow-down": "^1.6.0",
+    "helmet": "^7.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "pg": "^8.11.3",
+    "ioredis": "^5.3.2",
+    "jsonwebtoken": "^9.0.2",
+    "crypto": "^1.0.1",
+    "validator": "^13.11.0"
+  },
+  "keywords": [
+    "twitter",
+    "widget",
+    "embed",
+    "api",
+    "javascript",
+    "saas",
+    "multitenant"
+  ],
+  "author": "XTimeline SaaS Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
