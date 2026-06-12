@@ -80,17 +80,18 @@ function normalizeTweet(raw) {
 
   // Store structure info for debugging (caller reads this)
   if (!normalizeTweet._debugInfo) {
-    const userLegacy = raw.core?.user_results?.result?.legacy;
+    const userResult = raw.core?.user_results?.result;
+    const userLegacy = userResult?.legacy;
+    const userCore = userResult?.core;
     normalizeTweet._debugInfo = {
-      rawKeys: Object.keys(raw).join(', '),
-      coreExists: !!raw.core,
-      coreKeys: raw.core ? Object.keys(raw.core).join(', ') : 'N/A',
-      userResults: !!raw.core?.user_results,
-      userResult: raw.core?.user_results?.result ? Object.keys(raw.core.user_results.result).join(', ') : 'N/A',
       userLegacy: !!userLegacy,
-      userLegacyKeys: userLegacy ? Object.keys(userLegacy).join(', ') : 'N/A',
-      userLegacyName: userLegacy?.name || 'NULL',
-      userLegacyScreen: userLegacy?.screen_name || 'NULL',
+      userLegacyKeys: userLegacy ? Object.keys(userLegacy).slice(0, 10).join(', ') : 'N/A',
+      userCore: !!userCore,
+      userCoreKeys: userCore ? Object.keys(userCore).join(', ') : 'N/A',
+      userCoreName: userCore?.name || 'NULL',
+      userCoreScreen: userCore?.screen_name || 'NULL',
+      resultName: userResult?.name || 'NULL',
+      resultScreen: userResult?.screen_name || 'NULL',
     };
   }
 
