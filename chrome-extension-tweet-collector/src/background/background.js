@@ -244,14 +244,12 @@ async function saveTweetMedia(tweet) {
 async function handleExport(format) {
   if (format === 'csv') {
     const csv = await exportAllAsCSV();
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    await chrome.downloads.download({ url, filename: 'xtimeline-export-' + new Date().toISOString().split('T')[0] + '.csv', saveAs: true });
+    const dataUrl = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    await chrome.downloads.download({ url: dataUrl, filename: 'xtimeline-export-' + new Date().toISOString().split('T')[0] + '.csv', saveAs: true });
   } else {
     const json = await exportAllAsJSON();
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    await chrome.downloads.download({ url, filename: 'xtimeline-export-' + new Date().toISOString().split('T')[0] + '.json', saveAs: true });
+    const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+    await chrome.downloads.download({ url: dataUrl, filename: 'xtimeline-export-' + new Date().toISOString().split('T')[0] + '.json', saveAs: true });
   }
   return { success: true };
 }
