@@ -207,7 +207,7 @@ async function saveTweetMedia(tweet) {
       // Get filename from URL
       const urlParts = url.split('/');
       const filename = urlParts[urlParts.length - 1].split('?')[0];
-      const savePath = `xtimeline-media/${tweet.id}/${filename}`;
+      const savePath = `xtimeline-media/${tweet.id}_${filename}`;
 
       await chrome.downloads.download({
         url: url,
