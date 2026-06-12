@@ -78,6 +78,18 @@ function normalizeTweet(raw) {
   const legacy = raw.legacy;
   if (!legacy) return null;
 
+  // Store structure info for debugging (caller reads this)
+  if (!normalizeTweet._debugInfo) {
+    normalizeTweet._debugInfo = {
+      rawKeys: Object.keys(raw),
+      coreKeys: raw.core ? Object.keys(raw.core) : [],
+      userResult: raw.core?.user_results?.result ? Object.keys(raw.core.user_results.result) : [],
+      hasLegacy: !!legacy,
+      legacyUser: !!legacy.user,
+      legacyUserKeys: legacy.user ? Object.keys(legacy.user).slice(0, 8) : [],
+    };
+  }
+
   // Author extraction with multiple fallback paths
   let authorName = '';
   let authorScreenName = '';

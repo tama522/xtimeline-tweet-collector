@@ -84,6 +84,15 @@ async function handleGraphQLResponse(url, endpoint, data) {
 
     dbg(`→ ${endpoint}: ${tweets.length} tweets${isKnown ? ' ★' : ''}`);
 
+    // Log parser structure info (once)
+    if (normalizeTweet._debugInfo && !dbg._structureLogged) {
+      dbg._structureLogged = true;
+      const info = normalizeTweet._debugInfo;
+      dbg(`Structure: raw=[${info.rawKeys}] core=[${info.coreKeys}]`);
+      dbg(`user_result=[${info.userResult}] legacy.user=${info.legacyUser} keys=[${info.legacyUserKeys}]`);
+      normalizeTweet._debugInfo = null; // Reset for next endpoint
+    }
+
     if (tweets.length === 0) {
       if (isKnown) {
         const topKeys = data?.data ? Object.keys(data.data) : [];
