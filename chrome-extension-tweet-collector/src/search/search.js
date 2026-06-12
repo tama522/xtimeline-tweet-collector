@@ -185,13 +185,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     }
 
-    // Media strip
-    const mediaTweets = allTweets.filter(t => t.media_urls && t.media_urls.length).slice(0, 12);
+    // Media strip (images only, skip video URLs)
+    const mediaTweets = allTweets.filter(t => {
+      if (!t.media_urls || !t.media_urls.length) return false;
+      // At least one image URL (not video)
+      return t.media_urls.some(u => u && !u.includes('.mp4') && u.includes('pbs.twimg.com'));
+    }).slice(0, 12);
     if (mediaTweets.length === 0) {
       mediaStrip.innerHTML = '<div class="empty-msg"><p>メディアなし</p></div>';
     } else {
       mediaStrip.innerHTML = mediaTweets.flatMap(t =>
-        (t.media_urls || []).slice(0, 2).map(u => `<img class="media-thumb" src="${esc(u)}" loading="lazy" onerror="this.style.display='none'">`)
+        (t.media_urls || [])
+          .filter(u => u && !u.includes('.mp4') && u.includes('pbs.twimg.com'))
+          .slice(0, 2)
+          .map(u => `<img class="media-thumb" src="${esc(u)}" loading="lazy" onerror="this.style.display='none'">`)
       ).join('');
     }
 
@@ -257,9 +264,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ${badges.join('')}
               </div>
               <div class="tw-body">${highlight(t.text || '', query)}</div>
-              ${t.media_urls && t.media_urls.length ? `
+              ${t.media_urls && t.media_urls.filter(u => u && !u.includes('.mp4')).length ? `
                 <div class="tw-media">
-                  ${(t.media_urls || []).slice(0, 4).map(u => `<img src="${esc(u)}" loading="lazy" onerror="this.style.display='none'">`).join('')}
+                  ${(t.media_urls || []).filter(u => u && !u.includes('.mp4')).slice(0, 4).map(u => `<img src="${esc(u)}" loading="lazy" onerror="this.style.display='none'">`).join('')}
                 </div>
               ` : ''}
               <div class="tw-eng">

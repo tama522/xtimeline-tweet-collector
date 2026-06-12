@@ -84,8 +84,8 @@ function normalizeTweet(raw) {
   // Store structure info for debugging (caller reads this)
   if (!normalizeTweet._debugInfo) {
     const userResult = raw.core?.user_results?.result;
-    const userLegacy = userResult?.legacy;
     const userCore = userResult?.core;
+    const userLegacy = userResult?.legacy;
     normalizeTweet._debugInfo = {
       userLegacy: !!userLegacy,
       userLegacyKeys: userLegacy ? Object.keys(userLegacy).slice(0, 10).join(', ') : 'N/A',
@@ -95,6 +95,13 @@ function normalizeTweet(raw) {
       userCoreScreen: userCore?.screen_name || 'NULL',
       resultName: userResult?.name || 'NULL',
       resultScreen: userResult?.screen_name || 'NULL',
+      // Translation fields
+      hasNoteTweet: !!raw.note_tweet,
+      noteTweetKeys: raw.note_tweet ? Object.keys(raw.note_tweet).join(', ') : 'N/A',
+      hasTranslation: !!legacy.extended_entities?.translation,
+      translationKeys: legacy.extended_entities?.translation ? Object.keys(legacy.extended_entities.translation) : 'N/A',
+      legacyTranslation: !!legacy.translation,
+      lang: legacy.lang,
     };
   }
 

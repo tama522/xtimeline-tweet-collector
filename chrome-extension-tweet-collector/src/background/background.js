@@ -98,9 +98,9 @@ async function handleGraphQLResponse(url, endpoint, data, viewingAccount) {
       // Log parser debug info once
       if (normalizeTweet._debugInfo) {
         const d = normalizeTweet._debugInfo;
-        dbg(`  result: name="${d.resultName}" screen="${d.resultScreen}"`);
         dbg(`  core: ${d.userCore} name="${d.userCoreName}" screen="${d.userCoreScreen}"`);
-        dbg(`  core_keys: [${d.userCoreKeys}]`);
+        dbg(`  lang=${d.lang} note_tweet=${d.hasNoteTweet} [${d.noteTweetKeys}]`);
+        dbg(`  translation=${d.hasTranslation} legacy_translation=${d.legacyTranslation}`);
         normalizeTweet._debugInfo = null;
       }
     }
