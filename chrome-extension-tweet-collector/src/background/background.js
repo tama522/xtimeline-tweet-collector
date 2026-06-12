@@ -131,6 +131,19 @@ async function handleGraphQLResponse(url, endpoint, data, viewingAccount) {
 
       if (isSeen(tweet)) { duped++; continue; }
 
+      // If tweet already in DB, update engagement metrics
+      const existing = await getTweet(tweet.id);
+      if (existing) {
+        existing.retweet_count = tweet.retweet_count;
+        existing.favorite_count = tweet.favorite_count;
+        existing.reply_count = tweet.reply_count;
+        existing.translation = tweet.translation || existing.translation;
+        await putTweet(existing);
+        markSeen(tweet);
+        duped++;
+        continue;
+      }
+
       // Keyword filter
       const settings = await getSettings();
       if (settings.excludeKeywords && settings.excludeKeywords.length > 0) {

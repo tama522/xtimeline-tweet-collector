@@ -84,6 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     bookmarkedOnly = false;
     btnFilterAll.classList.add('active');
     btnFilterBM.classList.remove('active');
+    searchInput.value = '';
     doSearch();
   });
   btnFilterBM.addEventListener('click', () => {
@@ -91,7 +92,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnFilterBM.classList.add('active');
     btnFilterAll.classList.remove('active');
     searchInput.value = '';
-    console.log('[XTL:search] Bookmark filter clicked, bookmarkedOnly=', bookmarkedOnly);
     doSearch();
   });
 
