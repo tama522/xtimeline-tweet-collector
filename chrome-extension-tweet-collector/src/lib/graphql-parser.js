@@ -104,6 +104,8 @@ function normalizeTweet(raw) {
       lang: legacy.lang,
       grokTranslated: !!raw.grok_translated_post_with_availability,
       grokKeys: raw.grok_translated_post_with_availability ? Object.keys(raw.grok_translated_post_with_availability).join(', ') : null,
+      grokData: raw.grok_translated_post_with_availability?.data ? JSON.stringify(raw.grok_translated_post_with_availability.data).slice(0, 200) : null,
+      grokAvailable: raw.grok_translated_post_with_availability?.is_available,
     };
   }
 
