@@ -106,6 +106,8 @@ async function handleGraphQLResponse(url, endpoint, data, viewingAccount) {
           dbg(`  grok_translated: [${d.grokKeys}] available=${d.grokAvailable}`);
           if (d.grokData) dbg(`  grok_data: ${d.grokData}`);
         }
+        if (d.translationKeys) dbg(`  trans_keys: [${d.translationKeys}]`);
+        dbg(`  all_raw: [${d.allRawKeys}]`);
         normalizeTweet._debugInfo = null;
       }
     }

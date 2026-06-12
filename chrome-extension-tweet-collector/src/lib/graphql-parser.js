@@ -106,6 +106,12 @@ function normalizeTweet(raw) {
       grokKeys: raw.grok_translated_post_with_availability ? Object.keys(raw.grok_translated_post_with_availability).join(', ') : null,
       grokData: raw.grok_translated_post_with_availability?.data ? JSON.stringify(raw.grok_translated_post_with_availability.data).slice(0, 200) : null,
       grokAvailable: raw.grok_translated_post_with_availability?.is_available,
+      // Log ALL raw keys to find translation
+      allRawKeys: Object.keys(raw).join(', '),
+      // Check for any translation-related keys
+      translationKeys: Object.keys(raw).filter(k =>
+        k.toLowerCase().includes('trans') || k.toLowerCase().includes('lang')
+      ).join(', '),
     };
   }
 
