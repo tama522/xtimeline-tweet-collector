@@ -329,6 +329,51 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       case 'DELETE_ANON':
         return { deleted: await deleteAnonTweets() };
 
+      case 'EXPORT_BY_DATE': {
+        const days = request.days || 7;
+        const groups = await getTweetsGroupedByDate(days);
+        const results = [];
+        for (const [dateKey, tweets] of Object.entries(groups)) {
+          const json = JSON.stringify(tweets, null, 2);
+          const blob = new Blob([json], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          await chrome.downloads.download({
+            url,
+            filename: `xtimeline-backup/${dateKey}.json`,
+            conflictAction: 'uniquify',
+            saveAs: false
+          });
+          results.push({ date: dateKey, count: tweets.length });
+        }
+        return { exported: results };
+      }
+
+      case 'EXPORT_AND_DELETE': {
+        const days2 = request.days || 7;
+        const groups2 = await getTweetsGroupedByDate(days2);
+        const results2 = [];
+        for (const [dateKey, tweets] of Object.entries(groups2)) {
+          const json = JSON.stringify(tweets, null, 2);
+          const blob = new Blob([json], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          await chrome.downloads.download({
+            url,
+            filename: `xtimeline-backup/${dateKey}.json`,
+            conflictAction: 'uniquify',
+            saveAs: false
+          });
+          results2.push({ date: dateKey, count: tweets.length });
+        }
+        // Delete exported tweets
+        for (const dateKey of Object.keys(groups2)) {
+          await deleteTweetsByDate(dateKey);
+        }
+        return { exported: results2, deleted: true };
+      }
+
+      case 'GET_TWEET_DATES':
+        return await getTweetDates();
+
       case 'ACCOUNT_DETECTED':
         await addKnownAccount(request.account);
         return { ok: true };

@@ -204,31 +204,43 @@
     <div class="section">
       <h2>💾 データ管理</h2>
       <div class="storage-info" id="storageInfo">読み込み中…</div>
+
       <div class="form-group">
-        <label>データ保持期間</label>
+        <label>DB保持期間</label>
         <select id="dataRetentionDays">
           <option value="0">無期限</option>
           <option value="7">7日</option>
-          <option value="30">30日</option>
-          <option value="90">90日</option>
-          <option value="180">180日</option>
-          <option value="365">1年</option>
+          <option value="31">31日</option>
         </select>
+        <div class="hint">期間経過後、自動的に削除されます</div>
       </div>
+
       <div class="toggle-row">
         <label>画像をローカルに保存</label>
         <div class="toggle"><input type="checkbox" id="saveMedia"><span class="slider"></span></div>
       </div>
-      <div class="form-group" id="mediaDirGroup" style="display:none">
-        <label>保存先フォルダ</label>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="text" id="mediaDir" placeholder="未選択" readonly style="flex:1">
-          <button class="btn btn-primary btn-sm" id="btnPickDir">選択</button>
+
+      <div class="form-group" style="margin-top:12px">
+        <label>バックアップ</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" id="btnExportYesterday">昨日分DL</button>
+          <button class="btn btn-primary btn-sm" id="btnExport7days">過去7日DL</button>
+          <button class="btn btn-primary btn-sm" id="btnExportAll">全DL</button>
         </div>
-        <div class="hint">画像は Downloads/xtimeline-media/ に ツイートID_ファイル名 で保存されます</div>
+        <div class="hint">Downloads/xtimeline-backup/ に日付別JSONで保存</div>
       </div>
+
+      <div class="form-group" style="margin-top:8px">
+        <label>バックアップ＋DB整理</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-sm" id="btnExportDeleteYesterday" style="border:1px solid #e17055;color:#e17055">昨日分DL→削除</button>
+          <button class="btn btn-sm" id="btnExportDelete7days" style="border:1px solid #e17055;color:#e17055">過去7日DL→削除</button>
+        </div>
+        <div class="hint">DL後にDBから該当ツイートを削除します</div>
+      </div>
+
       <div class="btn-row">
-        <button class="btn btn-primary" id="btnSave">💾 保存</button>
+        <button class="btn btn-primary" id="btnSave">💾 設定保存</button>
         <button class="btn btn-danger" id="btnClearData">🗑 全削除</button>
       </div>
       <div class="status-msg" id="statusMsg"></div>

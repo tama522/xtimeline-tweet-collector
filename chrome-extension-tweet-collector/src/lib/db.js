@@ -460,6 +460,89 @@ async function deleteOlderThan(days) {
 }
 
 /**
+ * Get tweets grouped by date (collected_at)
+ * Returns { '2026-06-10': [...tweets], '2026-06-11': [...tweets] }
+ */
+async function getTweetsGroupedByDate(daysBack = 7) {
+  const cutoff = new Date(Date.now() - daysBack * 86400000).toISOString();
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_TWEETS, 'readonly');
+    const store = tx.objectStore(STORE_TWEETS);
+    const groups = {};
+
+    const req = store.openCursor();
+    req.onsuccess = (e) => {
+      const cursor = e.target.result;
+      if (!cursor) {
+        resolve(groups);
+        return;
+      }
+
+      const tweet = cursor.value;
+      const collected = tweet.collected_at || tweet.created_at || '';
+      if (collected >= cutoff) {
+        const dateKey = collected.slice(0, 10); // YYYY-MM-DD
+        if (!groups[dateKey]) groups[dateKey] = [];
+        groups[dateKey].push(tweet);
+      }
+      cursor.continue();
+    };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+/**
+ * Get all dates that have tweets
+ */
+async function getTweetDates() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_TWEETS, 'readonly');
+    const store = tx.objectStore(STORE_TWEETS);
+    const dates = new Set();
+
+    const req = store.openCursor();
+    req.onsuccess = (e) => {
+      const cursor = e.target.result;
+      if (!cursor) {
+        resolve([...dates].sort());
+        return;
+      }
+      const d = (cursor.value.collected_at || '').slice(0, 10);
+      if (d) dates.add(d);
+      cursor.continue();
+    };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+/**
+ * Delete tweets for a specific date
+ */
+async function deleteTweetsByDate(dateKey) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_TWEETS, 'readwrite');
+    const store = tx.objectStore(STORE_TWEETS);
+    let deleted = 0;
+
+    const req = store.openCursor();
+    req.onsuccess = (e) => {
+      const cursor = e.target.result;
+      if (!cursor) { resolve(deleted); return; }
+      if ((cursor.value.collected_at || '').startsWith(dateKey)) {
+        cursor.delete();
+        deleted++;
+      }
+      cursor.continue();
+    };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+/**
  * Clear all data
  */
 async function clearAll() {

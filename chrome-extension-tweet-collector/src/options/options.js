@@ -14,45 +14,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     webhookUrl: document.getElementById('webhookUrl'),
     dataRetentionDays: document.getElementById('dataRetentionDays'),
     saveMedia: document.getElementById('saveMedia'),
-    mediaDirGroup: document.getElementById('mediaDirGroup'),
-    mediaDir: document.getElementById('mediaDir'),
-    btnPickDir: document.getElementById('btnPickDir'),
     debugMode: document.getElementById('debugMode'),
     btnSave: document.getElementById('btnSave'),
     btnClearData: document.getElementById('btnClearData'),
+    btnExportYesterday: document.getElementById('btnExportYesterday'),
+    btnExport7days: document.getElementById('btnExport7days'),
+    btnExportAll: document.getElementById('btnExportAll'),
+    btnExportDeleteYesterday: document.getElementById('btnExportDeleteYesterday'),
+    btnExportDelete7days: document.getElementById('btnExportDelete7days'),
     storageInfo: document.getElementById('storageInfo'),
     statusMsg: document.getElementById('statusMsg')
   };
 
   let knownAccounts = [];
   let enabledAccounts = [];
-  let mediaDirHandle = null; // File System Access API handle
 
   function showStatus(msg, type) {
     elements.statusMsg.textContent = msg;
     elements.statusMsg.className = 'status-msg show ' + type;
     setTimeout(() => { elements.statusMsg.className = 'status-msg'; }, 3000);
   }
-
-  // Media save toggle
-  elements.saveMedia.addEventListener('change', () => {
-    elements.mediaDirGroup.style.display = elements.saveMedia.checked ? '' : 'none';
-  });
-
-  // Folder picker (File System Access API)
-  elements.btnPickDir.addEventListener('click', async () => {
-    try {
-      mediaDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-      elements.mediaDir.value = mediaDirHandle.name;
-      // Store the handle in IndexedDB for background to use
-      // Note: handles can't be sent via messages, so we store a reference
-      await chrome.storage.local.set({ mediaDirName: mediaDirHandle.name });
-    } catch (e) {
-      if (e.name !== 'AbortError') {
-        showStatus('フォルダ選択エラー: ' + e.message, 'error');
-      }
-    }
-  });
 
   function renderAccounts() {
     if (knownAccounts.length === 0) {
@@ -93,14 +74,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         elements.webhookUrl.value = settings.webhookUrl || '';
         elements.dataRetentionDays.value = String(settings.dataRetentionDays || 0);
         elements.saveMedia.checked = settings.saveMedia || false;
-        elements.mediaDirGroup.style.display = settings.saveMedia ? '' : 'none';
         elements.debugMode.checked = settings.debugMode || false;
-
-        // Restore media dir name
-        chrome.storage.local.get(['mediaDirName'], (r) => {
-          if (r.mediaDirName) elements.mediaDir.value = r.mediaDirName;
-        });
-
         resolve(settings);
       });
     });
@@ -119,13 +93,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // Save
-  elements.btnSave.addEventListener('click', async () => {
+  // Save settings
+  elements.btnSave.addEventListener('click', () => {
     const checked = elements.accountList.querySelectorAll('input[name="collectAccount"]:checked');
     const collectAccounts = Array.from(checked).map(el => el.value);
-
-    const excludeKw = elements.excludeKeywords.value
-      .split(',').map(s => s.trim()).filter(s => s.length > 0);
+    const excludeKw = elements.excludeKeywords.value.split(',').map(s => s.trim()).filter(s => s.length > 0);
 
     const settings = {
       collectAccounts,
@@ -150,7 +122,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Re-detect
+  // Backup: export only
+  elements.btnExportYesterday.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ type: 'EXPORT_BY_DATE', days: 2 }, (r) => {
+      if (r?.exported) showStatus(`✅ ${r.exported.length}日分をDL`, 'success');
+      else showStatus('エラー', 'error');
+    });
+  });
+
+  elements.btnExport7days.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ type: 'EXPORT_BY_DATE', days: 7 }, (r) => {
+      if (r?.exported) showStatus(`✅ ${r.exported.length}日分をDL`, 'success');
+      else showStatus('エラー', 'error');
+    });
+  });
+
+  elements.btnExportAll.addEventListener('click', () => {
+    chrome.runtime.sendMessage({ type: 'EXPORT_BY_DATE', days: 365 }, (r) => {
+      if (r?.exported) showStatus(`✅ ${r.exported.length}日分をDL`, 'success');
+      else showStatus('エラー', 'error');
+    });
+  });
+
+  // Backup + delete
+  elements.btnExportDeleteYesterday.addEventListener('click', () => {
+    if (!confirm('昨日分をDL後にDBから削除しますか？')) return;
+    chrome.runtime.sendMessage({ type: 'EXPORT_AND_DELETE', days: 2 }, (r) => {
+      if (r?.deleted) {
+        showStatus(`✅ DL・削除完了`, 'success');
+        loadStorageInfo();
+      }
+    });
+  });
+
+  elements.btnExportDelete7days.addEventListener('click', () => {
+    if (!confirm('過去7日分をDL後にDBから削除しますか？')) return;
+    chrome.runtime.sendMessage({ type: 'EXPORT_AND_DELETE', days: 7 }, (r) => {
+      if (r?.deleted) {
+        showStatus(`✅ DL・削除完了`, 'success');
+        loadStorageInfo();
+      }
+    });
+  });
+
+  // Re-detect accounts
   elements.btnRefresh.addEventListener('click', async () => {
     chrome.tabs.query({ url: ['https://x.com/*', 'https://twitter.com/*'] }, (tabs) => {
       if (tabs.length === 0) {
@@ -172,7 +187,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Clear
+  // Clear all
   elements.btnClearData.addEventListener('click', async () => {
     if (!confirm('すべての保存済みツイートデータを削除しますか？')) return;
     chrome.runtime.sendMessage({ type: 'CLEAR_DATA' }, (response) => {
