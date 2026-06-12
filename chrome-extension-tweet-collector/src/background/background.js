@@ -72,12 +72,19 @@ async function handleGraphQLResponse(url, endpoint, data) {
 
   try {
     const tweets = extractTweets(endpoint, data);
-    dbg(`GraphQL: ${endpoint} → ${tweets.length} tweets parsed`);
+    const knownEndpoints = [
+      'HomeTimeline', 'HomeLatestTimeline', 'UserTweets', 'UserTweetsAndReplies',
+      'TweetDetail', 'SearchTimeline', 'Bookmarks', 'ListLatestTweetsTimeline'
+    ];
+    const isKnown = knownEndpoints.includes(endpoint);
+
+    dbg(`GraphQL: ${endpoint} → ${tweets.length} tweets${isKnown ? '' : ' (non-tweet)'}`);
 
     if (tweets.length === 0) {
-      // Log structure hint for debugging
-      const topKeys = data?.data ? Object.keys(data.data) : [];
-      dbg(`  No tweets from ${endpoint}. Top keys: [${topKeys.join(', ')}]`);
+      if (isKnown) {
+        const topKeys = data?.data ? Object.keys(data.data) : [];
+        dbg(`  ⚠ Known endpoint 0 tweets. Keys: [${topKeys.join(', ')}]`);
+      }
       return;
     }
 
