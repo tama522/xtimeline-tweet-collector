@@ -210,7 +210,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const c = results.length === 200 ? '200+' : String(results.length);
       let info = query ? `"${query}" — ${c} 件` : `最新 ${c} 件`;
       if (viewedAs) info += ` · @${viewedAs}`;
-      if (user) info += ` · @${user}`;
       resultsInfo.textContent = info;
 
       if (!results.length) {
