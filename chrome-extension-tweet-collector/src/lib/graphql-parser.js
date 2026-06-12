@@ -102,6 +102,8 @@ function normalizeTweet(raw) {
       translationKeys: legacy.extended_entities?.translation ? Object.keys(legacy.extended_entities.translation) : 'N/A',
       legacyTranslation: !!legacy.translation,
       lang: legacy.lang,
+      grokTranslated: !!raw.grok_translated_post_with_availability,
+      grokKeys: raw.grok_translated_post_with_availability ? Object.keys(raw.grok_translated_post_with_availability).join(', ') : null,
     };
   }
 
