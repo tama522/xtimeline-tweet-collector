@@ -81,12 +81,13 @@ function normalizeTweet(raw) {
   // Store structure info for debugging (caller reads this)
   if (!normalizeTweet._debugInfo) {
     normalizeTweet._debugInfo = {
-      rawKeys: Object.keys(raw),
-      coreKeys: raw.core ? Object.keys(raw.core) : [],
-      userResult: raw.core?.user_results?.result ? Object.keys(raw.core.user_results.result) : [],
-      hasLegacy: !!legacy,
+      rawKeys: Object.keys(raw).join(', '),
+      coreExists: !!raw.core,
+      coreKeys: raw.core ? Object.keys(raw.core).join(', ') : 'N/A',
+      userResults: !!raw.core?.user_results,
+      userResult: raw.core?.user_results?.result ? Object.keys(raw.core.user_results.result).join(', ') : 'N/A',
       legacyUser: !!legacy.user,
-      legacyUserKeys: legacy.user ? Object.keys(legacy.user).slice(0, 8) : [],
+      legacyUserKeys: legacy.user ? Object.keys(legacy.user).join(', ') : 'N/A',
     };
   }
 

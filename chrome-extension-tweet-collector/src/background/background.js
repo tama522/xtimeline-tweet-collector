@@ -87,7 +87,16 @@ async function handleGraphQLResponse(url, endpoint, data) {
     // Always log first tweet's author info
     if (tweets.length > 0) {
       const s = tweets[0];
-      dbg(`  1st: name="${s.user_name}" handle="@${s.user_screen_name}" id=${s.id}`);
+      dbg(`  1st: name="${s.user_name}" handle="@${s.user_screen_name}"`);
+      // Log parser debug info once
+      if (normalizeTweet._debugInfo) {
+        const d = normalizeTweet._debugInfo;
+        dbg(`  raw: [${d.rawKeys}]`);
+        dbg(`  core=${d.coreExists} [${d.coreKeys}] user_results=${d.userResults}`);
+        dbg(`  user_result: [${d.userResult}]`);
+        dbg(`  legacy.user=${d.legacyUser} [${d.legacyUserKeys}]`);
+        normalizeTweet._debugInfo = null;
+      }
     }
 
     if (tweets.length === 0) {
