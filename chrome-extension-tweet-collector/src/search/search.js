@@ -97,6 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ── Load dashboard ──
   async function loadDashboard() {
+    try {
     const [stats, accounts, users, recent, allTweets] = await Promise.all([
       getStats().catch(() => ({})),
       getViewingAccounts().catch(() => []),
@@ -192,6 +193,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       o.value = a.account; o.textContent = `@${a.account} (${a.tweet_count})`;
       viewedAsFilter.appendChild(o);
     });
+    } catch (e) {
+      console.error('[XTL:search] loadDashboard error:', e);
+    }
   }
 
   // ── Search ──
