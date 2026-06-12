@@ -3,54 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>XTimeline — Search</title>
+  <title>XTimeline</title>
   <link rel="stylesheet" href="search.css">
 </head>
 <body>
-  <div class="app">
-    <header class="topbar">
-      <div class="topbar-left">
-        <strong class="brand">XTimeline</strong>
+  <div class="shell">
+    <!-- HEADER -->
+    <header class="hdr">
+      <div class="hdr-l">
+        <span class="brand">𝕏 Timeline</span>
+        <span class="brand-sub">collector</span>
       </div>
-      <div class="topbar-center">
-        <div class="search-box">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input type="text" id="searchInput" placeholder="ツイートを検索…" autofocus>
+      <div class="hdr-c">
+        <div class="search-pill">
+          <input type="text" id="searchInput" placeholder="検索…" autofocus>
+          <kbd>⌘K</kbd>
         </div>
       </div>
-      <div class="topbar-right">
-        <select id="viewedAsFilter">
-          <option value="">👁 すべてのアカウント</option>
-        </select>
-        <select id="userFilter">
-          <option value="">👤 すべてのユーザー</option>
-        </select>
-        <button class="btn btn-outline" id="btnExportJSON">JSON</button>
-        <button class="btn btn-outline" id="btnExportCSV">CSV</button>
-        <a class="btn btn-outline" href="../options/options.html" target="_blank">設定</a>
+      <div class="hdr-r">
+        <select id="viewedAsFilter"><option value="">全アカウント</option></select>
+        <select id="userFilter"><option value="">全ユーザー</option></select>
+        <span class="sep"></span>
+        <button class="pill-btn" id="btnExportJSON">↓ JSON</button>
+        <button class="pill-btn" id="btnExportCSV">↓ CSV</button>
+        <a class="pill-btn" href="../options/options.html" target="_blank">⚙</a>
       </div>
     </header>
 
-    <div class="layout">
-      <aside class="aside">
-        <div class="aside-card">
-          <div class="aside-label">保存済み</div>
-          <div class="aside-big" id="stats">—</div>
+    <!-- DASHBOARD VIEW -->
+    <div class="dash" id="dashboardView">
+      <!-- KPI row -->
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-num" id="kTotal">—</div>
+          <div class="kpi-label">保存済み</div>
         </div>
-        <div class="aside-card">
-          <div class="aside-label">最近保存したツイート</div>
-          <div class="aside-list" id="recentList">
-            <div class="aside-empty">読み込み中…</div>
-          </div>
+        <div class="kpi">
+          <div class="kpi-num" id="kAccounts">—</div>
+          <div class="kpi-label">アカウント</div>
         </div>
-      </aside>
+        <div class="kpi">
+          <div class="kpi-num" id="kUsers">—</div>
+          <div class="kpi-label">投稿者</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-num" id="kToday">—</div>
+          <div class="kpi-label">本日</div>
+        </div>
+      </div>
 
-      <main class="content">
-        <div class="content-header">
-          <span class="results-count" id="resultsInfo">最新のツイート</span>
+      <div class="dash-grid">
+        <!-- Account breakdown -->
+        <div class="panel">
+          <div class="panel-h">アカウント別内訳</div>
+          <div class="panel-body" id="accountChart"></div>
         </div>
-        <div class="tweet-list" id="tweetList"></div>
-      </main>
+
+        <!-- Top authors -->
+        <div class="panel">
+          <div class="panel-h">よく見る投稿者 TOP 10</div>
+          <div class="panel-body" id="topAuthors"></div>
+        </div>
+
+        <!-- Recent -->
+        <div class="panel panel-wide">
+          <div class="panel-h">
+            最近のツイート
+            <button class="link-btn" id="btnViewAll">すべて見る →</button>
+          </div>
+          <div class="panel-body" id="recentTable"></div>
+        </div>
+
+        <!-- Media -->
+        <div class="panel panel-wide">
+          <div class="panel-h">最近のメディア</div>
+          <div class="media-strip" id="mediaStrip"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEARCH RESULTS VIEW (hidden by default) -->
+    <div class="results" id="resultsView" style="display:none">
+      <div class="results-hdr">
+        <button class="link-btn" id="btnBack">← ダッシュボード</button>
+        <span id="resultsInfo"></span>
+      </div>
+      <div class="tweet-list" id="tweetList"></div>
     </div>
   </div>
 
