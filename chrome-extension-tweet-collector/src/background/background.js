@@ -335,10 +335,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const results = [];
         for (const [dateKey, tweets] of Object.entries(groups)) {
           const json = JSON.stringify(tweets, null, 2);
-          const blob = new Blob([json], { type: 'application/json' });
-          const url = URL.createObjectURL(blob);
+          const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
           await chrome.downloads.download({
-            url,
+            url: dataUrl,
             filename: `xtimeline-backup/${dateKey}.json`,
             conflictAction: 'uniquify',
             saveAs: false
@@ -354,17 +353,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const results2 = [];
         for (const [dateKey, tweets] of Object.entries(groups2)) {
           const json = JSON.stringify(tweets, null, 2);
-          const blob = new Blob([json], { type: 'application/json' });
-          const url = URL.createObjectURL(blob);
+          const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
           await chrome.downloads.download({
-            url,
+            url: dataUrl,
             filename: `xtimeline-backup/${dateKey}.json`,
             conflictAction: 'uniquify',
             saveAs: false
           });
           results2.push({ date: dateKey, count: tweets.length });
         }
-        // Delete exported tweets
         for (const dateKey of Object.keys(groups2)) {
           await deleteTweetsByDate(dateKey);
         }

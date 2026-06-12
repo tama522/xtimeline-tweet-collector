@@ -124,23 +124,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Backup: export only
   elements.btnExportYesterday.addEventListener('click', () => {
+    showStatus('エクスポート中...', 'success');
     chrome.runtime.sendMessage({ type: 'EXPORT_BY_DATE', days: 2 }, (r) => {
+      if (chrome.runtime.lastError) { showStatus('エラー: ' + chrome.runtime.lastError.message, 'error'); return; }
       if (r?.exported) showStatus(`✅ ${r.exported.length}日分をDL`, 'success');
-      else showStatus('エラー', 'error');
+      else showStatus('エラー: ' + (r?.error || '不明'), 'error');
     });
   });
 
   elements.btnExport7days.addEventListener('click', () => {
+    showStatus('エクスポート中...', 'success');
     chrome.runtime.sendMessage({ type: 'EXPORT_BY_DATE', days: 7 }, (r) => {
+      if (chrome.runtime.lastError) { showStatus('エラー: ' + chrome.runtime.lastError.message, 'error'); return; }
       if (r?.exported) showStatus(`✅ ${r.exported.length}日分をDL`, 'success');
-      else showStatus('エラー', 'error');
+      else showStatus('エラー: ' + (r?.error || '不明'), 'error');
     });
   });
 
   elements.btnExportAll.addEventListener('click', () => {
+    showStatus('エクスポート中...', 'success');
     chrome.runtime.sendMessage({ type: 'EXPORT_BY_DATE', days: 365 }, (r) => {
+      if (chrome.runtime.lastError) { showStatus('エラー: ' + chrome.runtime.lastError.message, 'error'); return; }
       if (r?.exported) showStatus(`✅ ${r.exported.length}日分をDL`, 'success');
-      else showStatus('エラー', 'error');
+      else showStatus('エラー: ' + (r?.error || '不明'), 'error');
     });
   });
 
