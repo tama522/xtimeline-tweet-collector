@@ -3,132 +3,197 @@
 <head>
   <meta charset="UTF-8">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --bg: #09090b;
+      --surface: #18181b;
+      --surface2: #27272a;
+      --border: #3f3f46;
+      --text: #fafafa;
+      --text2: #a1a1aa;
+      --text3: #71717a;
+      --accent: #6366f1;
+      --accent2: #a855f7;
+      --gradient: linear-gradient(135deg, var(--accent), var(--accent2));
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      width: 320px;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #15202b;
-      color: #e7e9ea;
-      padding: 12px;
+      width: 300px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 20px;
     }
+
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 20px;
     }
-    .header h1 { font-size: 16px; font-weight: 700; }
-    .badge {
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-weight: 600;
-    }
-    .badge.on { background: #00ba7c; color: #fff; }
-    .badge.off { background: #67070f; color: #f4212e; }
-
-    .account-info {
-      background: #192734;
-      border: 1px solid #38444d;
-      border-radius: 8px;
-      padding: 8px 12px;
-      margin-bottom: 12px;
+    .logo-wrap {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 13px;
     }
-    .account-info .label { color: #8899a6; }
-    .account-info .name { color: #1d9bf0; font-weight: 600; }
+    .logo-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px rgba(99,102,241,0.5);
+    }
+    .logo-name {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .status-dot.off {
+      background: #f43f5e;
+    }
+
+    .account-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .account-bar .label { font-size: 12px; color: var(--text3); }
+    .account-bar .name {
+      font-size: 14px;
+      font-weight: 600;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .account-bar .tag {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 8px;
+      background: rgba(99,102,241,0.1);
+      color: var(--accent);
+      font-weight: 600;
+      margin-left: auto;
+    }
 
     .stats-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 12px;
+      gap: 10px;
+      margin-bottom: 16px;
     }
     .stat-card {
-      background: #192734;
-      border: 1px solid #38444d;
-      border-radius: 8px;
-      padding: 8px;
-      text-align: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
     }
-    .stat-value { font-size: 20px; font-weight: 700; color: #1d9bf0; }
-    .stat-label { font-size: 11px; color: #8899a6; margin-top: 2px; }
+    .stat-val {
+      font-size: 26px;
+      font-weight: 700;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .stat-lbl {
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 4px;
+      font-weight: 500;
+    }
 
-    .actions {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 12px;
-    }
     .btn {
-      padding: 8px 12px;
-      border: 1px solid #38444d;
-      border-radius: 20px;
-      background: transparent;
-      color: #e7e9ea;
-      font-size: 13px;
+      display: block;
+      width: 100%;
+      padding: 11px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
       cursor: pointer;
       text-align: center;
+      transition: all 0.15s;
     }
-    .btn:hover { background: #1d2d3d; }
-    .btn-primary { background: #1d9bf0; border-color: #1d9bf0; color: #fff; font-weight: 600; }
-    .btn-primary:hover { background: #1a8cd8; }
-    .btn-stop { background: #67070f; border-color: #f4212e; color: #f4212e; }
+    .btn-primary {
+      background: var(--surface2);
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .btn-primary:hover { background: var(--border); }
+    .btn-stop {
+      background: rgba(244, 63, 94, 0.12);
+      color: #f43f5e;
+      margin-bottom: 8px;
+    }
+    .btn-search {
+      background: var(--gradient);
+      color: #fff;
+    }
+    .btn-search:hover { opacity: 0.9; }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 0;
+    }
 
     .links {
       display: flex;
       justify-content: center;
-      gap: 12px;
-      padding-top: 8px;
-      border-top: 1px solid #38444d;
+      gap: 16px;
     }
     .links a {
       font-size: 12px;
-      color: #1d9bf0;
+      color: var(--text2);
       text-decoration: none;
+      font-weight: 500;
     }
-    .links a:hover { text-decoration: underline; }
-
-    .method-tag {
-      font-size: 10px;
-      color: #00ba7c;
-      background: rgba(0, 186, 124, 0.1);
-      padding: 1px 6px;
-      border-radius: 6px;
-      margin-left: 8px;
-    }
+    .links a:hover { color: var(--text); }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>🔍 XTimeline</h1>
-    <span class="badge" id="statusBadge">-</span>
+    <div class="logo-wrap">
+      <div class="logo-dot" id="statusDot"></div>
+      <span class="logo-name">XTimeline</span>
+    </div>
   </div>
 
-  <div class="account-info">
-    <span class="label">閲覧中:</span>
-    <span class="name" id="viewingAccount">-</span>
-    <span class="method-tag">GraphQL</span>
+  <div class="account-bar">
+    <span class="label">閲覧中</span>
+    <span class="name" id="viewingAccount">—</span>
+    <span class="tag">GraphQL</span>
   </div>
 
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-value" id="savedCount">-</div>
-      <div class="stat-label">保存済み</div>
+      <div class="stat-val" id="savedCount">—</div>
+      <div class="stat-lbl">保存済み</div>
     </div>
     <div class="stat-card">
-      <div class="stat-value" id="sessionCount">-</div>
-      <div class="stat-label">本セッション</div>
+      <div class="stat-val" id="sessionCount">—</div>
+      <div class="stat-lbl">本セッション</div>
     </div>
   </div>
 
-  <div class="actions">
-    <button class="btn btn-primary" id="btnToggle">キャプチャを停止</button>
-    <button class="btn" id="btnSearch">🔍 検索ページを開く</button>
-  </div>
+  <button class="btn btn-stop" id="btnToggle">キャプチャを停止</button>
+  <button class="btn btn-search" id="btnSearch">🔍 検索ページを開く</button>
+
+  <div class="divider"></div>
 
   <div class="links">
     <a href="#" id="btnExportJSON">JSON</a>

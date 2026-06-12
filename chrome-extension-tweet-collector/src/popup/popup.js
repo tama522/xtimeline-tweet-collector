@@ -1,9 +1,9 @@
 /**
- * XTimeline Popup v3
+ * XTimeline Popup
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const statusBadge = document.getElementById('statusBadge');
+  const statusDot = document.getElementById('statusDot');
   const viewingAccount = document.getElementById('viewingAccount');
   const savedCount = document.getElementById('savedCount');
   const sessionCount = document.getElementById('sessionCount');
@@ -19,27 +19,20 @@ document.addEventListener('DOMContentLoaded', () => {
       if (chrome.runtime.lastError || !response) return;
 
       isEnabled = response.captureEnabled;
-      statusBadge.textContent = isEnabled ? 'ON' : 'OFF';
-      statusBadge.className = 'badge ' + (isEnabled ? 'on' : 'off');
+      statusDot.className = 'status-dot' + (isEnabled ? '' : ' off');
 
       savedCount.textContent = (response.savedCount || 0).toLocaleString();
       sessionCount.textContent = (response.sessionCount || 0).toLocaleString();
+      viewingAccount.textContent = response.viewingAccount ? '@' + response.viewingAccount : '—';
 
-      viewingAccount.textContent = response.viewingAccount
-        ? '@' + response.viewingAccount
-        : '未検出';
-
-      btnToggle.textContent = isEnabled ? '⏹ キャプチャを停止' : '▶ キャプチャを開始';
+      btnToggle.textContent = isEnabled ? '⏸ キャプチャを停止' : '▶ キャプチャを開始';
       btnToggle.className = isEnabled ? 'btn btn-stop' : 'btn btn-primary';
     });
   }
 
   btnToggle.addEventListener('click', () => {
-    chrome.runtime.sendMessage({ type: 'TOGGLE_CAPTURE' }, (response) => {
-      if (response) {
-        isEnabled = response.enabled;
-        refreshStatus();
-      }
+    chrome.runtime.sendMessage({ type: 'TOGGLE_CAPTURE' }, (r) => {
+      if (r) { isEnabled = r.enabled; refreshStatus(); }
     });
   });
 
