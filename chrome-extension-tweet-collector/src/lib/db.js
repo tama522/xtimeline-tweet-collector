@@ -473,6 +473,34 @@ async function clearAll() {
   });
 }
 
+/**
+ * Delete tweets with missing author info
+ */
+async function deleteAnonTweets() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_TWEETS, 'readwrite');
+    const store = tx.objectStore(STORE_TWEETS);
+    let deleted = 0;
+
+    const req = store.openCursor();
+    req.onsuccess = (e) => {
+      const cursor = e.target.result;
+      if (cursor) {
+        const t = cursor.value;
+        if (!t.user_name && !t.user_screen_name) {
+          cursor.delete();
+          deleted++;
+        }
+        cursor.continue();
+      }
+    };
+
+    tx.oncomplete = () => resolve(deleted);
+    tx.onerror = (e) => reject(e.target.error);
+  });
+}
+
 // Meta store helpers
 async function getMeta(key) {
   const db = await openDB();

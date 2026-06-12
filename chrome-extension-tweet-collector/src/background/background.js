@@ -268,6 +268,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       case 'DELETE_OLD':
         return { deleted: await deleteOlderThan(request.days || 30) };
 
+      case 'DELETE_ANON':
+        return { deleted: await deleteAnonTweets() };
+
+      case 'ACCOUNT_DETECTED':
+        await addKnownAccount(request.account);
+        return { ok: true };
+
+      case 'GET_KNOWN_ACCOUNTS':
+        return await getKnownAccounts();
+
       default:
         return { error: 'Unknown message type' };
     }
@@ -298,6 +308,10 @@ async function init() {
   }
 
   dbg('Background initialized. Capture:', captureEnabled);
+
+  // Auto-cleanup: remove old tweets without author info
+  const cleaned = await deleteAnonTweets().catch(() => 0);
+  if (cleaned > 0) dbg(`Cleanup: removed ${cleaned} tweets without author info`);
 }
 
 init();
