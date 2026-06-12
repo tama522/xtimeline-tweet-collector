@@ -232,6 +232,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const color = randomColor(t.user_screen_name);
         const badges = [];
         if (t.is_retweet) badges.push('<span class="tw-badge tw-badge-rt">RT</span>');
+        if (t.is_quote) badges.push('<span class="tw-badge tw-badge-qt">引用</span>');
         if (t.is_bookmarked) badges.push('<span class="tw-badge tw-badge-bm">⭐ BM</span>');
 
         return `

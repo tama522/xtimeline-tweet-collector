@@ -187,7 +187,32 @@ function normalizeTweet(raw) {
     lang: legacy.lang,
     translation: translation,
     translation_lang: translationLang,
+    is_quote: !!legacy.is_quote_status,
+    quoted_tweet_id: legacy.quoted_status_id_str || null,
   };
+}
+
+/**
+ * Extract quoted tweet as a separate tweet entry
+ */
+function extractQuotedTweet(raw) {
+  if (!raw) return null;
+
+  // Try multiple paths for quoted tweet data
+  const quotedResult = raw.legacy?.quoted_status_result?.result ||
+                       raw.quoted_status_result?.result;
+
+  if (!quotedResult) return null;
+
+  const unwrapped = unwrapTweetResult(quotedResult);
+  if (!unwrapped) return null;
+
+  // Use the same normalize function but mark as quoted
+  const tweet = normalizeTweet(unwrapped);
+  if (tweet) {
+    tweet.is_quoted = true;
+  }
+  return tweet;
 }
 
 function extractFromEntry(entry) {
@@ -204,7 +229,12 @@ function extractFromEntry(entry) {
     if (result) {
       const unwrapped = unwrapTweetResult(result);
       const tweet = normalizeTweet(unwrapped);
-      if (tweet) tweets.push(tweet);
+      if (tweet) {
+        tweets.push(tweet);
+        // Also extract quoted tweet as separate entry
+        const quoted = extractQuotedTweet(unwrapped);
+        if (quoted) tweets.push(quoted);
+      }
     }
     // Conversation threads
     if (content.items) {

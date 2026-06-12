@@ -232,6 +232,7 @@ body {
   text-transform: uppercase; letter-spacing: 0.03em;
 }
 .tw-badge-rt { background: #d4edda; color: #155724; }
+.tw-badge-qt { background: #e7f5ff; color: #1971c2; }
 .tw-badge-va { background: #e8e3f3; color: var(--accent); }
 .tw-badge-bm { background: #fff3bf; color: #e67700; }
 
