@@ -302,11 +302,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   viewedAsFilter.addEventListener('change', () => { if (resultsView.style.display !== 'none') doSearch(); else { doSearch(); } });
   userFilter.addEventListener('change', () => { if (resultsView.style.display !== 'none') doSearch(); else { doSearch(); } });
 
-  // Export
-  btnExportJSON.addEventListener('click', async () => {
+  // Export (buttons may not exist in current UI)
+  if (btnExportJSON) btnExportJSON.addEventListener('click', async () => {
     try { const j = await exportAllAsJSON(); dl(j, 'xtimeline-export.json', 'application/json'); } catch (e) { alert(e.message); }
   });
-  btnExportCSV.addEventListener('click', async () => {
+  if (btnExportCSV) btnExportCSV.addEventListener('click', async () => {
     try { const c = await exportAllAsCSV(); dl(c, 'xtimeline-export.csv', 'text/csv'); } catch (e) { alert(e.message); }
   });
   function dl(content, name, type) {
