@@ -329,6 +329,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       case 'EXPORT_BY_DATE': {
         const days = request.days || 7;
+        const prefix = request.prefix || 'export';
         const groups = await getTweetsGroupedByDate(days);
         const results = [];
         for (const [dateKey, tweets] of Object.entries(groups)) {
@@ -336,7 +337,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
           await chrome.downloads.download({
             url: dataUrl,
-            filename: `xtimeline-backup/${dateKey}.json`,
+            filename: `xtimeline-backup/${prefix}_${dateKey}.json`,
             conflictAction: 'uniquify',
             saveAs: false
           });
@@ -347,6 +348,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       case 'EXPORT_AND_DELETE': {
         const days2 = request.days || 7;
+        const prefix2 = request.prefix || 'export';
         const groups2 = await getTweetsGroupedByDate(days2);
         const results2 = [];
         for (const [dateKey, tweets] of Object.entries(groups2)) {
@@ -354,7 +356,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
           await chrome.downloads.download({
             url: dataUrl,
-            filename: `xtimeline-backup/${dateKey}.json`,
+            filename: `xtimeline-backup/${prefix2}_${dateKey}.json`,
             conflictAction: 'uniquify',
             saveAs: false
           });

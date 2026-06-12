@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Backup: export only
   elements.btnExportYesterday.addEventListener('click', () => {
     showStatus('エクスポート中...', 'success');
-    chrome.runtime.sendMessage({ type: 'EXPORT_BY_DATE', days: 2 }, (r) => {
+    chrome.runtime.sendMessage({ type: 'EXPORT_BY_DATE', days: 2, prefix: 'yesterday' }, (r) => {
       if (chrome.runtime.lastError) { showStatus('エラー: ' + chrome.runtime.lastError.message, 'error'); return; }
       if (r?.exported) showStatus(`✅ ${r.exported.length}日分をDL`, 'success');
       else showStatus('エラー: ' + (r?.error || '不明'), 'error');
@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   elements.btnExport7days.addEventListener('click', () => {
     showStatus('エクスポート中...', 'success');
-    chrome.runtime.sendMessage({ type: 'EXPORT_BY_DATE', days: 7 }, (r) => {
+    chrome.runtime.sendMessage({ type: 'EXPORT_BY_DATE', days: 7, prefix: '7days' }, (r) => {
       if (chrome.runtime.lastError) { showStatus('エラー: ' + chrome.runtime.lastError.message, 'error'); return; }
       if (r?.exported) showStatus(`✅ ${r.exported.length}日分をDL`, 'success');
       else showStatus('エラー: ' + (r?.error || '不明'), 'error');
@@ -143,7 +143,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   elements.btnExportAll.addEventListener('click', () => {
     showStatus('エクスポート中...', 'success');
-    chrome.runtime.sendMessage({ type: 'EXPORT_BY_DATE', days: 365 }, (r) => {
+    chrome.runtime.sendMessage({ type: 'EXPORT_BY_DATE', days: 365, prefix: 'all' }, (r) => {
       if (chrome.runtime.lastError) { showStatus('エラー: ' + chrome.runtime.lastError.message, 'error'); return; }
       if (r?.exported) showStatus(`✅ ${r.exported.length}日分をDL`, 'success');
       else showStatus('エラー: ' + (r?.error || '不明'), 'error');
@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Backup + delete
   elements.btnExportDeleteYesterday.addEventListener('click', () => {
     if (!confirm('昨日分をDL後にDBから削除しますか？')) return;
-    chrome.runtime.sendMessage({ type: 'EXPORT_AND_DELETE', days: 2 }, (r) => {
+    chrome.runtime.sendMessage({ type: 'EXPORT_AND_DELETE', days: 2, prefix: 'yesterday' }, (r) => {
       if (r?.deleted) {
         showStatus(`✅ DL・削除完了`, 'success');
         loadStorageInfo();
@@ -163,7 +163,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   elements.btnExportDelete7days.addEventListener('click', () => {
     if (!confirm('過去7日分をDL後にDBから削除しますか？')) return;
-    chrome.runtime.sendMessage({ type: 'EXPORT_AND_DELETE', days: 7 }, (r) => {
+    chrome.runtime.sendMessage({ type: 'EXPORT_AND_DELETE', days: 7, prefix: '7days' }, (r) => {
       if (r?.deleted) {
         showStatus(`✅ DL・削除完了`, 'success');
         loadStorageInfo();
