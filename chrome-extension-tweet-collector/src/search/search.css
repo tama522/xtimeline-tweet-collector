@@ -251,9 +251,11 @@ body {
   border-radius: 0 6px 6px 0;
 }
 
-.tw-media { display: flex; gap: 4px; margin-bottom: 6px; }
-.tw-media img {
-  height: 60px; border-radius: 6px; border: 1px solid var(--line); object-fit: cover;
+.tw-media-info {
+  margin-left: 46px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--t3);
 }
 
 .tw-eng { display: flex; gap: 14px; }
