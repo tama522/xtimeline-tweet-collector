@@ -222,6 +222,15 @@
 
       <div class="form-group" style="margin-top:12px">
         <label>バックアップ</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-primary btn-sm" id="btnExportIncremental">🔄 更新分を保存</button>
+          <span class="hint" id="lastBackupInfo">最終バックアップ: 未実行</span>
+        </div>
+        <div class="hint">前回バックアップ以降の新しいツイートだけ保存します</div>
+      </div>
+
+      <div class="form-group" style="margin-top:8px">
+        <label>一括バックアップ</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-primary btn-sm" id="btnExportYesterday">昨日分DL</button>
           <button class="btn btn-primary btn-sm" id="btnExport7days">過去7日DL</button>

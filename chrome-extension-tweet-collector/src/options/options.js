@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     debugMode: document.getElementById('debugMode'),
     btnSave: document.getElementById('btnSave'),
     btnClearData: document.getElementById('btnClearData'),
+    btnExportIncremental: document.getElementById('btnExportIncremental'),
+    lastBackupInfo: document.getElementById('lastBackupInfo'),
     btnExportYesterday: document.getElementById('btnExportYesterday'),
     btnExport7days: document.getElementById('btnExport7days'),
     btnExportAll: document.getElementById('btnExportAll'),
@@ -122,6 +124,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
+  // Incremental backup
+  function loadLastBackup() {
+    chrome.runtime.sendMessage({ type: 'GET_LAST_BACKUP' }, (r) => {
+      if (r?.lastBackupTime) {
+        const d = new Date(r.lastBackupTime);
+        elements.lastBackupInfo.textContent = '最終バックアップ: ' + d.toLocaleString('ja-JP');
+      } else {
+        elements.lastBackupInfo.textContent = '最終バックアップ: 未実行';
+      }
+    });
+  }
+
+  elements.btnExportIncremental.addEventListener('click', () => {
+    showStatus('更新分をエクスポート中...', 'success');
+    chrome.runtime.sendMessage({ type: 'EXPORT_INCREMENTAL' }, (r) => {
+      if (chrome.runtime.lastError) { showStatus('エラー: ' + chrome.runtime.lastError.message, 'error'); return; }
+      if (r?.exported > 0) {
+        showStatus(`✅ ${r.exported}件 (${r.dates}日分) をDL`, 'success');
+        loadLastBackup();
+      } else {
+        showStatus(r?.message || '新しいツイートがありません', 'success');
+      }
+    });
+  });
+
   // Backup: export only
   elements.btnExportYesterday.addEventListener('click', () => {
     showStatus('エクスポート中...', 'success');
@@ -209,4 +236,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadSettings();
   renderAccounts();
   loadStorageInfo();
+  loadLastBackup();
 });

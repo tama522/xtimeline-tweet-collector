@@ -460,6 +460,33 @@ async function deleteOlderThan(days) {
 }
 
 /**
+ * Get tweets collected after a specific timestamp
+ */
+async function getTweetsSince(sinceIso) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_TWEETS, 'readonly');
+    const store = tx.objectStore(STORE_TWEETS);
+    const results = [];
+
+    const req = store.openCursor();
+    req.onsuccess = (e) => {
+      const cursor = e.target.result;
+      if (!cursor) {
+        resolve(results);
+        return;
+      }
+      const collected = cursor.value.collected_at || '';
+      if (collected > sinceIso) {
+        results.push(cursor.value);
+      }
+      cursor.continue();
+    };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+/**
  * Get tweets grouped by date (collected_at)
  * Returns { '2026-06-10': [...tweets], '2026-06-11': [...tweets] }
  */

@@ -371,6 +371,48 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       case 'GET_TWEET_DATES':
         return await getTweetDates();
 
+      case 'EXPORT_INCREMENTAL': {
+        // Get last backup time
+        const stored = await new Promise(r => chrome.storage.local.get(['lastBackupTime'], r));
+        const since = stored.lastBackupTime || '2000-01-01T00:00:00.000Z';
+        const tweets = await getTweetsSince(since);
+
+        if (tweets.length === 0) {
+          return { exported: 0, message: '新しいツイートがありません' };
+        }
+
+        // Group by date
+        const groups = {};
+        for (const t of tweets) {
+          const d = (t.collected_at || '').slice(0, 10);
+          if (!groups[d]) groups[d] = [];
+          groups[d].push(t);
+        }
+
+        // Export each date group
+        for (const [dateKey, dateTweets] of Object.entries(groups)) {
+          const json = JSON.stringify(dateTweets, null, 2);
+          const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+          await chrome.downloads.download({
+            url: dataUrl,
+            filename: `xtimeline-backup/update_${dateKey}.json`,
+            conflictAction: 'uniquify',
+            saveAs: false
+          });
+        }
+
+        // Update last backup time
+        const now = new Date().toISOString();
+        await new Promise(r => chrome.storage.local.set({ lastBackupTime: now }, r));
+
+        return { exported: tweets.length, dates: Object.keys(groups).length };
+      }
+
+      case 'GET_LAST_BACKUP': {
+        const s = await new Promise(r => chrome.storage.local.get(['lastBackupTime'], r));
+        return { lastBackupTime: s.lastBackupTime || null };
+      }
+
       case 'ACCOUNT_DETECTED':
         await addKnownAccount(request.account);
         return { ok: true };
