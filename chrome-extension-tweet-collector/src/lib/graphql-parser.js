@@ -20,6 +20,10 @@ const INSTRUCTION_PATHS = {
   Likes: ['data', 'user', 'result', 'timeline', 'timeline', 'instructions'],
   CommunityTweetsTimeline: ['data', 'communityResults', 'result', 'ranked_community_timeline', 'timeline', 'instructions'],
   BookmarkFolderTimeline: ['data', 'bookmark_collection_timeline', 'timeline', 'instructions'],
+  // Possible alternate names X might use
+  FollowingTimeline: ['data', 'home', 'home_timeline_urt', 'instructions'],
+  ForYouTimeline: ['data', 'home', 'home_timeline_urt', 'instructions'],
+  Timeline: ['data', 'home', 'home_timeline_urt', 'instructions'],
 };
 
 function navigatePath(obj, path) {

@@ -75,8 +75,10 @@ async function handleGraphQLResponse(url, endpoint, data) {
 
     // Log ALL GraphQL endpoints
     const knownEndpoints = [
-      'HomeTimeline', 'HomeLatestTimeline', 'UserTweets', 'UserTweetsAndReplies',
-      'TweetDetail', 'SearchTimeline', 'Bookmarks', 'ListLatestTweetsTimeline'
+      'HomeTimeline', 'HomeLatestTimeline', 'FollowingTimeline', 'ForYouTimeline', 'Timeline',
+      'UserTweets', 'UserTweetsAndReplies', 'UserMedia', 'UserLikes',
+      'TweetDetail', 'SearchTimeline', 'Bookmarks', 'ListLatestTweetsTimeline',
+      'BookmarkFolderTimeline', 'CommunityTweetsTimeline'
     ];
     const isKnown = knownEndpoints.includes(endpoint);
 
