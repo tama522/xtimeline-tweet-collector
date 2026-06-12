@@ -273,7 +273,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
       });
     } catch (e) {
-      resultsInfo.textContent = 'エラー';
+      console.error('[XTL:search] doSearch error:', e);
+      resultsInfo.textContent = 'エラー: ' + e.message;
     }
   }
 
@@ -305,6 +306,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Init
-  await loadDashboard();
+  try {
+    await loadDashboard();
+    doSearch();
+  } catch (e) {
+    console.error('[XTL:search] init error:', e);
+  }
   setInterval(loadDashboard, 30000);
 });
