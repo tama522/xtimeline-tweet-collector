@@ -1,38 +1,88 @@
 /**
  * GraphQL Bridge — ISOLATED world content script
- * 1. Reads random event name from <meta> (set by content-main.js in MAIN world)
- * 2. Listens for CustomEvents → forwards GraphQL data to service worker
- * 3. Detects current viewing account → sends to service worker
- * 4. Retries on service worker failure (keeps buffer until SW wakes up)
+ * 1. Relays GraphQL data to service worker
+ * 2. Detects viewing account aggressively
+ * 3. Buffers messages when SW is asleep
  */
 (function () {
   'use strict';
 
   let currentAccount = null;
-  let pendingMessages = []; // Buffer for when SW is asleep
+  let pendingMessages = [];
   let flushTimer = null;
 
-  // --- Detect logged-in account ---
+  // --- Detect logged-in account (multiple methods) ---
   function detectAccount() {
-    const profileLink = document.querySelector('a[aria-label="Profile"], a[data-testid="AppTabBar_Profile_Link"]');
+    // Method 1: Profile link in sidebar
+    const profileLink = document.querySelector(
+      'a[aria-label="Profile"], a[data-testid="AppTabBar_Profile_Link"]'
+    );
     if (profileLink) {
       const href = profileLink.getAttribute('href');
       if (href && href.startsWith('/') && !href.includes('/status/')) {
         const name = href.replace('/', '').split('/')[0];
-        if (name && name !== 'i' && name !== 'settings') return name.toLowerCase();
-      }
-    }
-    const navLinks = document.querySelectorAll('nav a[href^="/"]');
-    for (const link of navLinks) {
-      const href = link.getAttribute('href');
-      if (href) {
-        const match = href.match(/^\/([a-zA-Z0-9_]+)$/);
-        if (match && !['i', 'settings', 'explore', 'search', 'notifications',
-            'home', 'messages', 'compose', 'bookmarks', 'lists'].includes(match[1])) {
-          return match[1].toLowerCase();
+        if (name && name !== 'i' && name !== 'settings' && name.length > 0) {
+          return name.toLowerCase();
         }
       }
     }
+
+    // Method 2: Account switcher button
+    const switcher = document.querySelector('[data-testid="SideNav_AccountSwitcher_Button"]');
+    if (switcher) {
+      const img = switcher.querySelector('img[src*="profile_images"]');
+      if (img) {
+        // Try to get screen name from nearby link
+        const nearbyLink = switcher.closest('a') || switcher.querySelector('a');
+        if (nearbyLink) {
+          const href = nearbyLink.getAttribute('href');
+          if (href && href.startsWith('/')) {
+            const name = href.replace('/', '').split('/')[0];
+            if (name && name !== 'i') return name.toLowerCase();
+          }
+        }
+      }
+    }
+
+    // Method 3: Nav links (any link that looks like a username)
+    const navLinks = document.querySelectorAll('nav a[href^="/"], header a[href^="/"]');
+    for (const link of navLinks) {
+      const href = link.getAttribute('href');
+      if (href) {
+        const match = href.match(/^\/([a-zA-Z0-9_]{1,15})$/);
+        if (match) {
+          const name = match[1].toLowerCase();
+          if (!['i', 'settings', 'explore', 'search', 'notifications',
+              'home', 'messages', 'compose', 'bookmarks', 'lists',
+              'premium', 'verified', 'communities', 'grok'].includes(name)) {
+            return name;
+          }
+        }
+      }
+    }
+
+    // Method 4: Look for screen name in any element with @ text near profile image
+    const profileImgs = document.querySelectorAll('img[src*="profile_images"]');
+    for (const img of profileImgs) {
+      const container = img.closest('a') || img.parentElement;
+      if (container) {
+        const href = container.getAttribute('href');
+        if (href && href.startsWith('/') && !href.includes('/status/')) {
+          const name = href.replace('/', '').split('/')[0];
+          if (name && name !== 'i' && name.length > 0 && name.length <= 15) {
+            return name.toLowerCase();
+          }
+        }
+      }
+    }
+
+    // Method 5: Check document meta or title
+    const metaHandle = document.querySelector('meta[name="twitter:creator"]');
+    if (metaHandle) {
+      const handle = metaHandle.content?.replace('@', '');
+      if (handle) return handle.toLowerCase();
+    }
+
     return null;
   }
 
@@ -43,9 +93,14 @@
         currentAccount = account;
         sendMessage({ type: 'VIEWING_ACCOUNT', account });
       }
-      setTimeout(check, 15000 + Math.random() * 10000);
+      // Re-detect even if we already have an account (in case user switched)
+      setTimeout(check, 5000 + Math.random() * 5000);
     };
+    // Initial check with retry (page may not be fully loaded)
     check();
+    setTimeout(check, 1000);
+    setTimeout(check, 3000);
+    setTimeout(check, 5000);
   }
 
   // --- Send with retry / buffering ---
@@ -53,7 +108,6 @@
     try {
       chrome.runtime.sendMessage(msg, (response) => {
         if (chrome.runtime.lastError) {
-          // SW is probably asleep, buffer the message
           pendingMessages.push(msg);
           scheduleFlush();
         }
@@ -78,21 +132,15 @@
     for (const msg of batch) {
       try {
         chrome.runtime.sendMessage(msg, () => {
-          if (chrome.runtime.lastError) {
-            // Still asleep, re-buffer
-            pendingMessages.push(msg);
-          }
+          if (chrome.runtime.lastError) pendingMessages.push(msg);
         });
       } catch (e) {
         pendingMessages.push(msg);
       }
     }
-    if (pendingMessages.length > 0) {
-      scheduleFlush();
-    }
+    if (pendingMessages.length > 0) scheduleFlush();
   }
 
-  // Periodically retry pending messages (SW might wake up)
   setInterval(flushPending, 10000);
 
   // --- GraphQL event relay ---
@@ -100,11 +148,16 @@
     document.addEventListener(eventName, (e) => {
       try {
         const payload = JSON.parse(e.detail);
+        // Attach current account to every message
+        if (currentAccount) {
+          payload.viewingAccount = currentAccount;
+        }
         sendMessage({
           type: 'GRAPHQL_RESPONSE',
           url: payload.url,
           endpoint: payload.endpoint,
-          data: payload.data
+          data: payload.data,
+          viewingAccount: currentAccount
         });
       } catch (_) {}
     });
@@ -130,19 +183,17 @@
 
   watchAccount();
 
-  // Re-inject check: if page navigates within SPA, re-check beacon
+  // Re-check on SPA navigation
   let lastUrl = location.href;
   new MutationObserver(() => {
     if (location.href !== lastUrl) {
       lastUrl = location.href;
-      // Re-check if bridge is still connected
       const meta = document.querySelector('meta[name="__xtl_cfg"]');
       if (meta) {
-        const eventName = meta.content;
+        startRelay(meta.content);
         meta.remove();
-        startRelay(eventName);
       }
-      // Re-detect account on navigation
+      // Force re-detect account on navigation
       const account = detectAccount();
       if (account && account !== currentAccount) {
         currentAccount = account;

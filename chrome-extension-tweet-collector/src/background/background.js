@@ -67,8 +67,14 @@ async function saveSettings(settings) {
 let currentViewingAccount = null;
 
 // --- Process GraphQL response ---
-async function handleGraphQLResponse(url, endpoint, data) {
+async function handleGraphQLResponse(url, endpoint, data, viewingAccount) {
   if (!captureEnabled) return;
+
+  // Update viewing account from bridge (more reliable than separate messages)
+  if (viewingAccount && viewingAccount !== currentViewingAccount) {
+    currentViewingAccount = viewingAccount;
+    addKnownAccount(viewingAccount);
+  }
 
   try {
     const tweets = extractTweets(endpoint, data);
@@ -204,7 +210,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const handleAsync = async () => {
     switch (request.type) {
       case 'GRAPHQL_RESPONSE':
-        await handleGraphQLResponse(request.url, request.endpoint, request.data);
+        await handleGraphQLResponse(request.url, request.endpoint, request.data, request.viewingAccount);
         return { ok: true };
 
       case 'VIEWING_ACCOUNT':
