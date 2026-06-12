@@ -95,45 +95,39 @@ function normalizeTweet(raw) {
     };
   }
 
-  // Author extraction with multiple fallback paths
+  // Author extraction - X API puts name/screen_name in user_results.result.core
   let authorName = '';
   let authorScreenName = '';
   let authorId = '';
   let profileImageUrl = '';
 
-  // Path 1: core.user_results.result.legacy (standard)
-  const core = raw.core?.user_results?.result;
-  const author = core?.legacy;
-  if (author) {
-    authorName = author.name || '';
-    authorScreenName = author.screen_name || '';
-    authorId = core.rest_id || '';
-    profileImageUrl = author.profile_image_url_https || '';
+  const userResult = raw.core?.user_results?.result;
+  const userCore = userResult?.core;
+  const userLegacy = userResult?.legacy;
+
+  // Primary: user_results.result.core (where X puts name/screen_name now)
+  if (userCore) {
+    authorName = userCore.name || '';
+    authorScreenName = userCore.screen_name || '';
   }
 
-  // Path 2: If author still empty, try from legacy.user
-  if (!authorName && legacy.user) {
-    authorName = legacy.user.name || '';
-    authorScreenName = legacy.user.screen_name || '';
-    authorId = legacy.user.id_str || '';
-    profileImageUrl = legacy.user.profile_image_url_https || '';
+  // Fallback: user_results.result.legacy (older API structure)
+  if (!authorName && userLegacy) {
+    authorName = userLegacy.name || '';
+    authorScreenName = userLegacy.screen_name || '';
   }
 
-  // Path 3: If still empty, try core.user_results.result directly
-  if (!authorName && core) {
-    authorName = core.name || core.legacy?.name || '';
-    authorScreenName = core.screen_name || core.legacy?.screen_name || '';
+  // Fallback: user_results.result directly
+  if (!authorName && userResult) {
+    authorName = userResult.name || '';
+    authorScreenName = userResult.screen_name || '';
   }
 
-  // Path 4: last resort - try to get from in_tweet_entity_map or card
-  if (!authorScreenName) {
-    // Try to extract from tweet URL pattern in entities
-    const urls = legacy.entities?.urls || [];
-    for (const u of urls) {
-      const match = u.expanded_url?.match(/x\.com\/([a-zA-Z0-9_]+)\/status/);
-      if (match) { authorScreenName = match[1]; break; }
-    }
-  }
+  // Author ID
+  authorId = userResult?.rest_id || '';
+
+  // Profile image from legacy (always in legacy)
+  profileImageUrl = userLegacy?.profile_image_url_https || '';
 
   // Media URLs
   const mediaUrls = [];
