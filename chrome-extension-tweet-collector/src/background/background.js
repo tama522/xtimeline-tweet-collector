@@ -353,16 +353,6 @@ async function init() {
   }
 
   dbg('Background initialized. Capture:', captureEnabled);
-
-  // Reset DB to fix is_bookmarked type issue (boolean → number)
-  try {
-    await clearAll();
-    seenIds.clear();
-    sessionCount = 0;
-    dbg('DB reset: cleared all data for schema migration');
-  } catch (e) {
-    dbg('DB reset error: ' + e.message);
-  }
 }
 
 init();
