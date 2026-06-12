@@ -78,7 +78,8 @@ async function handleGraphQLResponse(url, endpoint, data) {
       'HomeTimeline', 'HomeLatestTimeline', 'FollowingTimeline', 'ForYouTimeline', 'Timeline',
       'UserTweets', 'UserTweetsAndReplies', 'UserMedia', 'UserLikes',
       'TweetDetail', 'SearchTimeline', 'Bookmarks', 'ListLatestTweetsTimeline',
-      'BookmarkFolderTimeline', 'CommunityTweetsTimeline'
+      'BookmarkFolderTimeline', 'CommunityTweetsTimeline',
+      'TweetRecommendations', 'RelatedTweets'
     ];
     const isKnown = knownEndpoints.includes(endpoint);
 

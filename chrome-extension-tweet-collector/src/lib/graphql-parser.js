@@ -24,6 +24,9 @@ const INSTRUCTION_PATHS = {
   FollowingTimeline: ['data', 'home', 'home_timeline_urt', 'instructions'],
   ForYouTimeline: ['data', 'home', 'home_timeline_urt', 'instructions'],
   Timeline: ['data', 'home', 'home_timeline_urt', 'instructions'],
+  // Discover more / recommendations
+  TweetRecommendations: ['data', 'message', 'tweet_results', 'result'],
+  RelatedTweets: ['data', 'message', 'tweet_results', 'result'],
 };
 
 function navigatePath(obj, path) {
@@ -182,35 +185,71 @@ function extractFromEntry(entry) {
     // Conversation threads
     if (content.items) {
       for (const sub of content.items) {
-        const r = sub.item?.itemContent?.tweet_results?.result;
-        if (r) {
-          const u = unwrapTweetResult(r);
-          const t = normalizeTweet(u);
-          if (t) tweets.push(t);
-        }
+        tweets.push(...extractFromEntry(sub));
       }
     }
   }
 
-  // TimelineTimelineModule
+  // TimelineTimelineModule (includes "Discover more" sections)
   if (content.entryType === 'TimelineTimelineModule' || content.items) {
     const items = content.items || [];
     for (const item of items) {
+      // Try multiple paths
       const r = item.item?.itemContent?.tweet_results?.result ||
-                item.itemContent?.tweet_results?.result;
+                item.itemContent?.tweet_results?.result ||
+                item.tweet_results?.result;
       if (r) {
         const u = unwrapTweetResult(r);
         const t = normalizeTweet(u);
         if (t) tweets.push(t);
       }
+      // Recurse into nested items
+      if (item.item?.items) {
+        for (const sub of item.item.items) {
+          tweets.push(...extractFromEntry(sub));
+        }
+      }
     }
   }
 
-  // Fallback: if entry has tweet_results directly
+  // Fallback: direct tweet_results
   if (tweets.length === 0 && content.tweet_results) {
     const u = unwrapTweetResult(content.tweet_results.result);
     const t = normalizeTweet(u);
     if (t) tweets.push(t);
+  }
+
+  // Deep fallback: search for any tweet_results in the entry
+  if (tweets.length === 0) {
+    const found = findTweetsDeep(entry, 3);
+    tweets.push(...found);
+  }
+
+  return tweets;
+}
+
+/**
+ * Recursively search for tweet_results in nested structures
+ */
+function findTweetsDeep(obj, depth) {
+  if (depth <= 0 || obj == null || typeof obj !== 'object') return [];
+  const tweets = [];
+
+  if (obj.tweet_results?.result) {
+    const u = unwrapTweetResult(obj.tweet_results.result);
+    const t = normalizeTweet(u);
+    if (t) return [t];
+  }
+
+  if (Array.isArray(obj)) {
+    for (const item of obj) {
+      tweets.push(...findTweetsDeep(item, depth - 1));
+    }
+  } else {
+    for (const key of Object.keys(obj)) {
+      if (key === 'tweet_results') continue;
+      tweets.push(...findTweetsDeep(obj[key], depth - 1));
+    }
   }
 
   return tweets;
