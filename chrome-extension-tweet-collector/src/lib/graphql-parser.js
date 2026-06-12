@@ -149,6 +149,11 @@ function normalizeTweet(raw) {
   // Profile image from legacy (always in legacy)
   profileImageUrl = userLegacy?.profile_image_url_https || '';
 
+  // Extract translation if available
+  const grokData = raw.grok_translated_post_with_availability?.data;
+  const translation = grokData?.translation || null;
+  const translationLang = grokData?.destination_language || null;
+
   // Media URLs
   const mediaUrls = [];
   for (const m of (legacy.extended_entities?.media || legacy.entities?.media || [])) {
@@ -180,6 +185,8 @@ function normalizeTweet(raw) {
     source_endpoint: null,
     conversation_id: legacy.conversation_id_str,
     lang: legacy.lang,
+    translation: translation,
+    translation_lang: translationLang,
   };
 }
 

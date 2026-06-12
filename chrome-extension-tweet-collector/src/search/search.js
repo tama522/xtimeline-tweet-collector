@@ -246,6 +246,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ${badges.join('')}
               </div>
               <div class="tw-body">${highlight(t.text || '', query)}</div>
+              ${t.translation ? `<div class="tw-translation">🌐 ${esc(t.translation)}</div>` : ''}
               ${t.media_urls && t.media_urls.filter(u => u && !u.includes('.mp4')).length ? `
                 <div class="tw-media">
                   ${(t.media_urls || []).filter(u => u && !u.includes('.mp4')).slice(0, 4).map(u => `<img src="${esc(u)}" loading="lazy" onerror="this.style.display='none'">`).join('')}

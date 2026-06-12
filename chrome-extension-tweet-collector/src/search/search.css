@@ -238,6 +238,18 @@ body {
 .tw-body { font-size: 14px; line-height: 1.6; color: var(--t); word-break: break-word; margin-bottom: 6px; }
 .tw-body mark { background: #fff3bf; border-radius: 2px; padding: 0 1px; }
 
+.tw-translation {
+  margin-left: 46px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--t2);
+  padding: 8px 12px;
+  background: var(--bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+}
+
 .tw-media { display: flex; gap: 4px; margin-bottom: 6px; }
 .tw-media img {
   height: 60px; border-radius: 6px; border: 1px solid var(--line); object-fit: cover;
