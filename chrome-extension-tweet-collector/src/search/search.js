@@ -90,6 +90,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     bookmarkedOnly = true;
     btnFilterBM.classList.add('active');
     btnFilterAll.classList.remove('active');
+    searchInput.value = '';
+    console.log('[XTL:search] Bookmark filter clicked, bookmarkedOnly=', bookmarkedOnly);
     doSearch();
   });
 
@@ -200,12 +202,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     showResults();
     resultsInfo.textContent = '検索中…';
 
+    console.log('[XTL:search] doSearch:', { query, viewedAs, bookmarkedOnly });
+
     try {
       const results = await searchTweets(query, {
         limit: 200,
         viewedAsFilter: viewedAs || null,
         bookmarkedOnly,
       });
+
+      console.log('[XTL:search] results:', results.length);
 
       const c = results.length === 200 ? '200+' : String(results.length);
       let info = query ? `"${query}" — ${c} 件` : `最新 ${c} 件`;
