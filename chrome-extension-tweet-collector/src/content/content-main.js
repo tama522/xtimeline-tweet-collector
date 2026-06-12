@@ -125,16 +125,19 @@
 
   XMLHttpRequest.prototype.open = makePatchedOpen(nativeOpen);
 
-  // --- Re-patch on SPA navigation (not on interval) ---
-  // X's SPA might overwrite fetch/XHR on navigation
+  // --- Re-patch on SPA navigation ---
+  // Store original patch references for comparison
+  const myFetch = window.fetch;
+  const myOpen = XMLHttpRequest.prototype.open;
   let lastPath = location.pathname;
+
   new MutationObserver(() => {
     if (location.pathname !== lastPath) {
       lastPath = location.pathname;
-      if (window.fetch !== patchedFetch) {
+      if (window.fetch !== myFetch) {
         window.fetch = makePatchedFetch(window.fetch);
       }
-      if (XMLHttpRequest.prototype.open !== patchedOpen) {
+      if (XMLHttpRequest.prototype.open !== myOpen) {
         XMLHttpRequest.prototype.open = makePatchedOpen(XMLHttpRequest.prototype.open);
       }
     }
