@@ -23,7 +23,7 @@ function dbg(...args) {
   console.log('[XTL]', ...args);
 }
 
-// Settings
+// Default settings
 const DEFAULT_SETTINGS = {
   isEnabled: true,
   collectAccounts: [],
@@ -31,6 +31,7 @@ const DEFAULT_SETTINGS = {
   webhookUrl: '',
   webhookEnabled: false,
   dataRetentionDays: 0,
+  saveMedia: false,
   debugMode: false
 };
 
@@ -136,6 +137,9 @@ async function handleGraphQLResponse(url, endpoint, data, viewingAccount) {
       markSeen(tweet);
       saved++;
       sessionCount++;
+
+      // Save media if enabled
+      saveTweetMedia(tweet);
     }
 
     dbg(`  Saved: ${saved}, Duped: ${duped}, Filtered: ${filtered}`);
@@ -186,6 +190,34 @@ async function addKnownAccount(account) {
     accounts.push(account);
     await new Promise((resolve) => chrome.storage.local.set({ knownAccounts: accounts }, resolve));
     dbg('New account detected:', account);
+  }
+}
+
+// --- Media saving ---
+async function saveTweetMedia(tweet) {
+  if (!tweet.media_urls || tweet.media_urls.length === 0) return;
+  const settings = await getSettings();
+  if (!settings.saveMedia) return;
+
+  for (const url of tweet.media_urls) {
+    if (!url || url.includes('.mp4')) continue; // Skip videos, only save images
+    if (!url.includes('pbs.twimg.com')) continue;
+
+    try {
+      // Get filename from URL
+      const urlParts = url.split('/');
+      const filename = urlParts[urlParts.length - 1].split('?')[0];
+      const savePath = `xtimeline-media/${tweet.id}/${filename}`;
+
+      await chrome.downloads.download({
+        url: url,
+        filename: savePath,
+        conflictAction: 'skip',
+        saveAs: false
+      });
+    } catch (err) {
+      dbg(`Media save error: ${err.message}`);
+    }
   }
 }
 
