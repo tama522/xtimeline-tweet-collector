@@ -84,13 +84,12 @@ async function handleGraphQLResponse(url, endpoint, data) {
 
     dbg(`→ ${endpoint}: ${tweets.length} tweets${isKnown ? ' ★' : ''}`);
 
-    // Log parser structure info (once)
-    if (normalizeTweet._debugInfo && !dbg._structureLogged) {
+    // Log first tweet structure for debugging (once per session)
+    if (tweets.length > 0 && !dbg._structureLogged) {
       dbg._structureLogged = true;
-      const info = normalizeTweet._debugInfo;
-      dbg(`Structure: raw=[${info.rawKeys}] core=[${info.coreKeys}]`);
-      dbg(`user_result=[${info.userResult}] legacy.user=${info.legacyUser} keys=[${info.legacyUserKeys}]`);
-      normalizeTweet._debugInfo = null; // Reset for next endpoint
+      const sample = tweets[0];
+      dbg(`Sample: name="${sample.user_name}" handle="${sample.user_screen_name}"`);
+      dbg(`Keys: [${Object.keys(sample).join(', ')}]`);
     }
 
     if (tweets.length === 0) {
