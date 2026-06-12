@@ -1,8 +1,6 @@
 /**
  * GraphQL Bridge — ISOLATED world content script
- * 1. Relays GraphQL data to service worker
- * 2. Detects viewing account aggressively
- * 3. Buffers messages when SW is asleep
+ * Relays GraphQL data to service worker + detects viewing account
  */
 (function () {
   'use strict';
@@ -10,100 +8,53 @@
   let currentAccount = null;
   let pendingMessages = [];
   let flushTimer = null;
+  let detectAttempts = 0;
 
-  // --- Detect logged-in account (multiple methods) ---
+  // --- Detect logged-in account (efficient) ---
   function detectAccount() {
-    // Method 1: Profile link in sidebar
-    const profileLink = document.querySelector(
-      'a[aria-label="Profile"], a[data-testid="AppTabBar_Profile_Link"]'
-    );
-    if (profileLink) {
-      const href = profileLink.getAttribute('href');
-      if (href && href.startsWith('/') && !href.includes('/status/')) {
-        const name = href.replace('/', '').split('/')[0];
-        if (name && name !== 'i' && name !== 'settings' && name.length > 0) {
-          return name.toLowerCase();
-        }
-      }
-    }
-
-    // Method 2: Account switcher button
-    const switcher = document.querySelector('[data-testid="SideNav_AccountSwitcher_Button"]');
-    if (switcher) {
-      const img = switcher.querySelector('img[src*="profile_images"]');
-      if (img) {
-        // Try to get screen name from nearby link
-        const nearbyLink = switcher.closest('a') || switcher.querySelector('a');
-        if (nearbyLink) {
-          const href = nearbyLink.getAttribute('href');
-          if (href && href.startsWith('/')) {
-            const name = href.replace('/', '').split('/')[0];
-            if (name && name !== 'i') return name.toLowerCase();
-          }
-        }
-      }
-    }
-
-    // Method 3: Nav links (any link that looks like a username)
-    const navLinks = document.querySelectorAll('nav a[href^="/"], header a[href^="/"]');
-    for (const link of navLinks) {
+    // Fast path: sidebar profile link
+    const link = document.querySelector('a[data-testid="AppTabBar_Profile_Link"]');
+    if (link) {
       const href = link.getAttribute('href');
-      if (href) {
-        const match = href.match(/^\/([a-zA-Z0-9_]{1,15})$/);
-        if (match) {
-          const name = match[1].toLowerCase();
-          if (!['i', 'settings', 'explore', 'search', 'notifications',
-              'home', 'messages', 'compose', 'bookmarks', 'lists',
-              'premium', 'verified', 'communities', 'grok'].includes(name)) {
-            return name;
-          }
-        }
+      if (href && href.startsWith('/') && href.length > 1) {
+        const name = href.slice(1).split('/')[0];
+        if (name && name !== 'i' && name !== 'settings') return name.toLowerCase();
       }
     }
 
-    // Method 4: Look for screen name in any element with @ text near profile image
-    const profileImgs = document.querySelectorAll('img[src*="profile_images"]');
-    for (const img of profileImgs) {
-      const container = img.closest('a') || img.parentElement;
-      if (container) {
-        const href = container.getAttribute('href');
-        if (href && href.startsWith('/') && !href.includes('/status/')) {
-          const name = href.replace('/', '').split('/')[0];
-          if (name && name !== 'i' && name.length > 0 && name.length <= 15) {
-            return name.toLowerCase();
-          }
-        }
+    // Fallback: aria-label
+    const profile = document.querySelector('a[aria-label="Profile"]');
+    if (profile) {
+      const href = profile.getAttribute('href');
+      if (href && href.startsWith('/') && href.length > 1) {
+        const name = href.slice(1).split('/')[0];
+        if (name && name !== 'i' && name !== 'settings') return name.toLowerCase();
       }
-    }
-
-    // Method 5: Check document meta or title
-    const metaHandle = document.querySelector('meta[name="twitter:creator"]');
-    if (metaHandle) {
-      const handle = metaHandle.content?.replace('@', '');
-      if (handle) return handle.toLowerCase();
     }
 
     return null;
   }
 
-  function watchAccount() {
-    const check = () => {
-      const account = detectAccount();
-      if (account && account !== currentAccount) {
-        currentAccount = account;
-        sendMessage({ type: 'VIEWING_ACCOUNT', account });
-      }
-      // Re-detect even if we already have an account (in case user switched)
-      setTimeout(check, 5000 + Math.random() * 5000);
-    };
-    // Initial check with retry (page may not be fully loaded)
-    check();
-    setTimeout(check, 1000);
-    setTimeout(check, 3000);
-    setTimeout(check, 5000);
+  // --- Account detection: aggressive on load, then only on navigation ---
+  function checkAccount() {
+    const account = detectAccount();
+    if (account && account !== currentAccount) {
+      currentAccount = account;
+      sendMessage({ type: 'VIEWING_ACCOUNT', account });
+    }
+    return account;
   }
 
-  // --- Send with retry / buffering ---
+  // Retry aggressively for first 15 seconds after page load
+  function initialDetect() {
+    const found = checkAccount();
+    detectAttempts++;
+    if (!found && detectAttempts < 15) {
+      setTimeout(initialDetect, 1000);
+    }
+  }
+
+  // --- Send with buffering ---
   function sendMessage(msg) {
     try {
       chrome.runtime.sendMessage(msg, (response) => {
@@ -120,10 +71,7 @@
 
   function scheduleFlush() {
     if (flushTimer) return;
-    flushTimer = setTimeout(() => {
-      flushTimer = null;
-      flushPending();
-    }, 2000);
+    flushTimer = setTimeout(() => { flushTimer = null; flushPending(); }, 2000);
   }
 
   function flushPending() {
@@ -134,9 +82,7 @@
         chrome.runtime.sendMessage(msg, () => {
           if (chrome.runtime.lastError) pendingMessages.push(msg);
         });
-      } catch (e) {
-        pendingMessages.push(msg);
-      }
+      } catch (e) { pendingMessages.push(msg); }
     }
     if (pendingMessages.length > 0) scheduleFlush();
   }
@@ -148,10 +94,6 @@
     document.addEventListener(eventName, (e) => {
       try {
         const payload = JSON.parse(e.detail);
-        // Attach current account to every message
-        if (currentAccount) {
-          payload.viewingAccount = currentAccount;
-        }
         sendMessage({
           type: 'GRAPHQL_RESPONSE',
           url: payload.url,
@@ -166,39 +108,28 @@
   function findBeacon() {
     const meta = document.querySelector('meta[name="__xtl_cfg"]');
     if (meta) {
-      const eventName = meta.content;
+      startRelay(meta.content);
       meta.remove();
-      startRelay(eventName);
     } else {
       requestAnimationFrame(findBeacon);
     }
   }
 
   // --- Init ---
-  if (document.documentElement) {
-    findBeacon();
-  } else {
-    document.addEventListener('DOMContentLoaded', findBeacon, { once: true });
-  }
+  if (document.documentElement) findBeacon();
+  else document.addEventListener('DOMContentLoaded', findBeacon, { once: true });
 
-  watchAccount();
+  initialDetect();
 
-  // Re-check on SPA navigation
+  // Re-detect only on SPA navigation (not on interval)
   let lastUrl = location.href;
   new MutationObserver(() => {
     if (location.href !== lastUrl) {
       lastUrl = location.href;
+      checkAccount();
+      // Re-check beacon on navigation
       const meta = document.querySelector('meta[name="__xtl_cfg"]');
-      if (meta) {
-        startRelay(meta.content);
-        meta.remove();
-      }
-      // Force re-detect account on navigation
-      const account = detectAccount();
-      if (account && account !== currentAccount) {
-        currentAccount = account;
-        sendMessage({ type: 'VIEWING_ACCOUNT', account });
-      }
+      if (meta) { startRelay(meta.content); meta.remove(); }
     }
   }).observe(document, { subtree: true, childList: true });
 })();

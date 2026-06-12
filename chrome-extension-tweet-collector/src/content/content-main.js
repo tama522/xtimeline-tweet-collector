@@ -125,18 +125,20 @@
 
   XMLHttpRequest.prototype.open = makePatchedOpen(nativeOpen);
 
-  // --- Re-patch on SPA navigation / override detection ---
-  const myFetch = window.fetch;
-  const myOpen = XMLHttpRequest.prototype.open;
-
-  setInterval(() => {
-    if (window.fetch !== myFetch) {
-      window.fetch = makePatchedFetch(window.fetch);
+  // --- Re-patch on SPA navigation (not on interval) ---
+  // X's SPA might overwrite fetch/XHR on navigation
+  let lastPath = location.pathname;
+  new MutationObserver(() => {
+    if (location.pathname !== lastPath) {
+      lastPath = location.pathname;
+      if (window.fetch !== patchedFetch) {
+        window.fetch = makePatchedFetch(window.fetch);
+      }
+      if (XMLHttpRequest.prototype.open !== patchedOpen) {
+        XMLHttpRequest.prototype.open = makePatchedOpen(XMLHttpRequest.prototype.open);
+      }
     }
-    if (XMLHttpRequest.prototype.open !== myOpen) {
-      XMLHttpRequest.prototype.open = makePatchedOpen(XMLHttpRequest.prototype.open);
-    }
-  }, 3000);
+  }).observe(document, { subtree: true, childList: true });
 
   console.log('[XTL:main] GraphQL interceptor installed. Watching for /i/api/graphql/ requests.');
 })();
