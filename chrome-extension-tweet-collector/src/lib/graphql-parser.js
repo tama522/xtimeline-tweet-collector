@@ -1,10 +1,9 @@
 /**
  * GraphQL Response Parser
- * Extracts normalized tweet objects from X/Twitter GraphQL responses.
- * Based on xTap's parser (MIT License), simplified for local storage use.
+ * Extracts normalized tweets from X/Twitter GraphQL responses.
+ * Handles multiple endpoint formats with fallback extraction.
  */
 
-// Instruction paths per GraphQL endpoint
 const INSTRUCTION_PATHS = {
   HomeTimeline: ['data', 'home', 'home_timeline_urt', 'instructions'],
   HomeLatestTimeline: ['data', 'home', 'home_timeline_urt', 'instructions'],
@@ -23,132 +22,140 @@ const INSTRUCTION_PATHS = {
   BookmarkFolderTimeline: ['data', 'bookmark_collection_timeline', 'timeline', 'instructions'],
 };
 
-/**
- * Navigate a nested path in an object
- */
 function navigatePath(obj, path) {
-  let current = obj;
-  for (const key of path) {
-    if (current == null || typeof current !== 'object') return null;
-    current = current[key];
+  let cur = obj;
+  for (const k of path) {
+    if (cur == null || typeof cur !== 'object') return null;
+    cur = cur[k];
   }
-  return current;
+  return cur;
 }
 
-/**
- * Recursively search for an instructions array (fallback for unknown endpoints)
- */
-function findInstructionsRecursive(obj, maxDepth) {
-  if (maxDepth <= 0 || obj == null || typeof obj !== 'object') return null;
+function findInstructionsRecursive(obj, depth) {
+  if (depth <= 0 || obj == null || typeof obj !== 'object') return null;
   if (Array.isArray(obj.instructions)) {
-    const hasEntries = obj.instructions.some(i =>
-      i.type === 'TimelineAddEntries' || i.entries || i.type === 'TimelineAddToModule'
-    );
-    if (hasEntries) return obj.instructions;
+    if (obj.instructions.some(i => i.type === 'TimelineAddEntries' || i.entries || i.type === 'TimelineAddToModule'))
+      return obj.instructions;
   }
   for (const key of Object.keys(obj)) {
     if (key === 'instructions') continue;
-    const result = findInstructionsRecursive(obj[key], maxDepth - 1);
-    if (result) return result;
+    const r = findInstructionsRecursive(obj[key], depth - 1);
+    if (r) return r;
   }
   return null;
 }
 
-/**
- * Find instructions array in GraphQL response
- */
 function findInstructions(endpoint, data) {
   const path = INSTRUCTION_PATHS[endpoint];
   if (path) {
-    const result = navigatePath(data, path);
-    if (result) return result;
+    const r = navigatePath(data, path);
+    if (r) return r;
   }
-  return findInstructionsRecursive(data, 5);
+  return findInstructionsRecursive(data, 6);
 }
 
-/**
- * Unwrap tweet result (handle TweetWithVisibilityResults, etc.)
- */
 function unwrapTweetResult(result) {
   if (!result) return null;
-  // Direct tweet
   if (result.rest_id && result.legacy) return result;
-  // TweetWithVisibilityResults wrapper
   if (result.tweet) return unwrapTweetResult(result.tweet);
-  // TweetResult wrapper
   if (result.result) return unwrapTweetResult(result.result);
+  // TweetWithVisibilityResults
+  if (result.__typename === 'TweetWithVisibilityResults' && result.tweet) return unwrapTweetResult(result.tweet);
   return null;
 }
 
 /**
- * Normalize a raw tweet object from GraphQL into a clean structure
+ * Normalize a raw tweet from GraphQL into a flat object
+ * matching db.js schema and UI expectations
  */
 function normalizeTweet(raw) {
-  if (!raw || !raw.rest_id || !raw.legacy) return null;
+  if (!raw || !raw.rest_id) return null;
 
   const legacy = raw.legacy;
+  if (!legacy) return null;
+
+  // Author extraction with multiple fallback paths
+  let authorName = '';
+  let authorScreenName = '';
+  let authorId = '';
+  let profileImageUrl = '';
+
+  // Path 1: core.user_results.result.legacy (standard)
   const core = raw.core?.user_results?.result;
   const author = core?.legacy;
+  if (author) {
+    authorName = author.name || '';
+    authorScreenName = author.screen_name || '';
+    authorId = core.rest_id || '';
+    profileImageUrl = author.profile_image_url_https || '';
+  }
 
-  // Media extraction
-  const media = (legacy.extended_entities?.media || legacy.entities?.media || []).map(m => ({
-    type: m.type,
-    url: m.media_url_https || m.video_info?.variants?.sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0))?.[0]?.url,
-    width: m.sizes?.large?.w,
-    height: m.sizes?.large?.h,
-  }));
+  // Path 2: If author still empty, try from legacy.user
+  if (!authorName && legacy.user) {
+    authorName = legacy.user.name || '';
+    authorScreenName = legacy.user.screen_name || '';
+    authorId = legacy.user.id_str || '';
+    profileImageUrl = legacy.user.profile_image_url_https || '';
+  }
 
-  // Engagement metrics
-  const metrics = {
-    likes: legacy.favorite_count || 0,
-    retweets: legacy.retweet_count || 0,
-    replies: legacy.reply_count || 0,
-    views: parseInt(raw.views?.count || '0', 10) || 0,
-    bookmarks: legacy.bookmark_count || 0,
-    quotes: legacy.quote_count || 0,
-  };
+  // Path 3: If still empty, try core.user_results.result directly
+  if (!authorName && core) {
+    authorName = core.name || core.legacy?.name || '';
+    authorScreenName = core.screen_name || core.legacy?.screen_name || '';
+  }
+
+  // Path 4: last resort - try to get from in_tweet_entity_map or card
+  if (!authorScreenName) {
+    // Try to extract from tweet URL pattern in entities
+    const urls = legacy.entities?.urls || [];
+    for (const u of urls) {
+      const match = u.expanded_url?.match(/x\.com\/([a-zA-Z0-9_]+)\/status/);
+      if (match) { authorScreenName = match[1]; break; }
+    }
+  }
+
+  // Media URLs
+  const mediaUrls = [];
+  for (const m of (legacy.extended_entities?.media || legacy.entities?.media || [])) {
+    if (m.media_url_https) mediaUrls.push(m.media_url_https);
+    if (m.video_info?.variants) {
+      const best = m.video_info.variants
+        .filter(v => v.bitrate != null)
+        .sort((a, b) => b.bitrate - a.bitrate)[0];
+      if (best?.url) mediaUrls.push(best.url);
+    }
+  }
 
   return {
     id: raw.rest_id,
-    url: `https://x.com/${author?.screen_name}/status/${raw.rest_id}`,
-    created_at: legacy.created_at,
-    captured_at: new Date().toISOString(),
+    user_name: authorName,
+    user_screen_name: authorScreenName,
     text: legacy.full_text || '',
-    lang: legacy.lang,
-    author: {
-      id: core?.rest_id,
-      username: author?.screen_name,
-      display_name: author?.name,
-      verified: author?.verified,
-      is_blue_verified: author?.verified_type === 'Blue',
-      follower_count: author?.followers_count,
-      profile_image_url: author?.profile_image_url_https,
-    },
-    metrics,
-    media,
+    created_at: legacy.created_at || '',
+    collected_at: new Date().toISOString(),
+    retweet_count: legacy.retweet_count || 0,
+    favorite_count: legacy.favorite_count || 0,
+    reply_count: legacy.reply_count || 0,
     is_retweet: !!legacy.retweeted_status_result,
-    retweeted_tweet_id: legacy.retweeted_status_result?.result?.rest_id || null,
-    is_quote: !!legacy.is_quote_status,
-    quoted_tweet_id: legacy.quoted_status_id_str || null,
-    in_reply_to: legacy.in_reply_to_status_id_str || null,
+    media_urls: mediaUrls.length > 0 ? mediaUrls : undefined,
+    url: authorScreenName
+      ? `https://x.com/${authorScreenName}/status/${raw.rest_id}`
+      : `https://x.com/i/status/${raw.rest_id}`,
+    viewed_as: null,
+    source_endpoint: null,
     conversation_id: legacy.conversation_id_str,
-    source_endpoint: null, // Set by caller
+    lang: legacy.lang,
   };
 }
 
-/**
- * Extract tweets from a single timeline entry
- */
 function extractFromEntry(entry) {
   const tweets = [];
   const content = entry.content || entry;
 
-  // Cursor entries — skip
-  if (content.entryType === 'TimelineTimelineCursor' || content.cursorType) {
-    return tweets;
-  }
+  // Cursor
+  if (content.entryType === 'TimelineTimelineCursor' || content.cursorType) return tweets;
 
-  // TimelineTimelineItem (single tweet)
+  // TimelineTimelineItem
   if (content.entryType === 'TimelineTimelineItem' || content.itemContent) {
     const item = content.itemContent || content;
     const result = item?.tweet_results?.result;
@@ -157,43 +164,50 @@ function extractFromEntry(entry) {
       const tweet = normalizeTweet(unwrapped);
       if (tweet) tweets.push(tweet);
     }
-    // Also check for conversation threads
+    // Conversation threads
     if (content.items) {
-      for (const subItem of content.items) {
-        const subResult = subItem.item?.itemContent?.tweet_results?.result;
-        if (subResult) {
-          const unwrapped = unwrapTweetResult(subResult);
-          const tweet = normalizeTweet(unwrapped);
-          if (tweet) tweets.push(tweet);
+      for (const sub of content.items) {
+        const r = sub.item?.itemContent?.tweet_results?.result;
+        if (r) {
+          const u = unwrapTweetResult(r);
+          const t = normalizeTweet(u);
+          if (t) tweets.push(t);
         }
       }
     }
   }
 
-  // TimelineTimelineModule (e.g. conversation modules)
+  // TimelineTimelineModule
   if (content.entryType === 'TimelineTimelineModule' || content.items) {
     const items = content.items || [];
     for (const item of items) {
-      const result = item.item?.itemContent?.tweet_results?.result ||
-                     item.itemContent?.tweet_results?.result;
-      if (result) {
-        const unwrapped = unwrapTweetResult(result);
-        const tweet = normalizeTweet(unwrapped);
-        if (tweet) tweets.push(tweet);
+      const r = item.item?.itemContent?.tweet_results?.result ||
+                item.itemContent?.tweet_results?.result;
+      if (r) {
+        const u = unwrapTweetResult(r);
+        const t = normalizeTweet(u);
+        if (t) tweets.push(t);
       }
     }
+  }
+
+  // Fallback: if entry has tweet_results directly
+  if (tweets.length === 0 && content.tweet_results) {
+    const u = unwrapTweetResult(content.tweet_results.result);
+    const t = normalizeTweet(u);
+    if (t) tweets.push(t);
   }
 
   return tweets;
 }
 
 /**
- * Main entry point: extract all tweets from a GraphQL response
+ * Main entry: extract all tweets from a GraphQL response
  */
 function extractTweets(endpoint, data) {
   if (!data) return [];
 
-  // TweetResultByRestId returns a single tweet
+  // Single tweet endpoint
   if (endpoint === 'TweetResultByRestId') {
     const result = data?.data?.tweetResult?.result;
     if (!result) return [];
@@ -211,7 +225,6 @@ function extractTweets(endpoint, data) {
     for (const entry of entries) {
       tweets.push(...extractFromEntry(entry));
     }
-    // Some instructions have a single entry
     if (instruction.entry) {
       tweets.push(...extractFromEntry(instruction.entry));
     }

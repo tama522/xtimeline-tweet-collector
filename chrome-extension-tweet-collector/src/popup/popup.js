@@ -8,23 +8,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const statusLabel = document.getElementById('statusLabel');
   const savedCount = document.getElementById('savedCount');
   const sessionCount = document.getElementById('sessionCount');
-  const queueCount = document.getElementById('queueCount');
   const lastTweetBlock = document.getElementById('lastTweetBlock');
   const ltUser = document.getElementById('ltUser');
   const ltText = document.getElementById('ltText');
   const ltTime = document.getElementById('ltTime');
   const btnToggle = document.getElementById('btnToggle');
   const btnSearch = document.getElementById('btnSearch');
-  const btnExportJSON = document.getElementById('btnExportJSON');
-  const btnExportCSV = document.getElementById('btnExportCSV');
+  const btnDebug = document.getElementById('btnDebug');
+  const debugLog = document.getElementById('debugLog');
 
   let enabled = true;
+  let debugVisible = false;
 
   function fmtTime(iso) {
     if (!iso) return '';
     const d = new Date(iso);
-    const now = new Date();
-    const min = Math.floor((now - d) / 60000);
+    const min = Math.floor((Date.now() - d) / 60000);
     if (min < 1) return 'たった今';
     if (min < 60) return `${min}分前`;
     if (min < 1440) return `${Math.floor(min / 60)}時間前`;
@@ -36,24 +35,26 @@ document.addEventListener('DOMContentLoaded', () => {
       if (chrome.runtime.lastError || !r) return;
 
       enabled = r.captureEnabled;
-
       statusDot.className = 'hero-dot ' + (enabled ? 'on' : 'off');
       viewingAccount.textContent = r.viewingAccount ? '@' + r.viewingAccount : '未接続';
       statusLabel.textContent = enabled ? 'キャプチャ中' : '停止中';
-
       savedCount.textContent = (r.savedCount || 0).toLocaleString();
       sessionCount.textContent = (r.sessionCount || 0).toLocaleString();
-
       btnToggle.textContent = enabled ? '⏸ 停止' : '▶ 開始';
       btnToggle.className = enabled ? 'btn btn-on' : 'btn btn-off';
+
+      // Debug logs
+      if (r.debugLogs && r.debugLogs.length > 0) {
+        debugLog.textContent = r.debugLogs.join('\n');
+      }
     });
 
-    // Load recent for last tweet preview
+    // Last tweet
     chrome.runtime.sendMessage({ type: 'GET_RECENT', limit: 1 }, (r) => {
       if (r && r.length > 0) {
         const t = r[0];
         lastTweetBlock.style.display = '';
-        ltUser.textContent = '@' + (t.user_screen_name || t.user_name || '?');
+        ltUser.textContent = (t.user_name || '@' + t.user_screen_name || '不明');
         ltText.textContent = (t.text || '').slice(0, 100);
         ltTime.textContent = fmtTime(t.collected_at || t.created_at);
       }
@@ -71,15 +72,12 @@ document.addEventListener('DOMContentLoaded', () => {
     window.close();
   });
 
-  btnExportJSON.addEventListener('click', (e) => {
-    e.preventDefault();
-    chrome.runtime.sendMessage({ type: 'EXPORT_JSON' });
-  });
-
-  btnExportCSV.addEventListener('click', (e) => {
-    e.preventDefault();
-    chrome.runtime.sendMessage({ type: 'EXPORT_CSV' });
+  btnDebug.addEventListener('click', () => {
+    debugVisible = !debugVisible;
+    debugLog.classList.toggle('show', debugVisible);
+    btnDebug.textContent = debugVisible ? 'デバッグログを隠す' : 'デバッグログを表示';
   });
 
   refresh();
+  setInterval(refresh, 3000);
 });
