@@ -84,12 +84,10 @@ async function handleGraphQLResponse(url, endpoint, data) {
 
     dbg(`→ ${endpoint}: ${tweets.length} tweets${isKnown ? ' ★' : ''}`);
 
-    // Log first tweet structure for debugging (once per session)
-    if (tweets.length > 0 && !dbg._structureLogged) {
-      dbg._structureLogged = true;
-      const sample = tweets[0];
-      dbg(`Sample: name="${sample.user_name}" handle="${sample.user_screen_name}"`);
-      dbg(`Keys: [${Object.keys(sample).join(', ')}]`);
+    // Always log first tweet's author info
+    if (tweets.length > 0) {
+      const s = tweets[0];
+      dbg(`  1st: name="${s.user_name}" handle="@${s.user_screen_name}" id=${s.id}`);
     }
 
     if (tweets.length === 0) {
