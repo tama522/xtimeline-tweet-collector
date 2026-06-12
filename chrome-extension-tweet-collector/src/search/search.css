@@ -76,6 +76,7 @@ body {
   color: var(--t2); cursor: pointer; text-decoration: none; display: inline-flex;
 }
 .pill-btn:hover { border-color: var(--accent); color: var(--accent); }
+.pill-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 
 /* ── DASHBOARD ── */
 .dash { padding: 20px 24px; overflow-y: auto; height: calc(100vh - 54px); }
@@ -234,6 +235,7 @@ body {
 }
 .tw-badge-rt { background: #d4edda; color: #155724; }
 .tw-badge-va { background: #e8e3f3; color: var(--accent); }
+.tw-badge-bm { background: #fff3bf; color: #e67700; }
 
 .tw-body { font-size: 14px; line-height: 1.6; color: var(--t); word-break: break-word; margin-bottom: 6px; }
 .tw-body mark { background: #fff3bf; border-radius: 2px; padding: 0 1px; }

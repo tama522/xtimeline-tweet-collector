@@ -4,7 +4,7 @@
  */
 
 const DB_NAME = 'xtimeline_tweets';
-const DB_VERSION = 2; // v2: added viewed_as index
+const DB_VERSION = 3; // v3: added is_bookmarked index
 const STORE_TWEETS = 'tweets';
 const STORE_META = 'meta';
 
@@ -27,12 +27,15 @@ function openDB() {
         store.createIndex('created_at', 'created_at', { unique: false });
         store.createIndex('collected_at', 'collected_at', { unique: false });
         store.createIndex('viewed_as', 'viewed_as', { unique: false });
-      } else if (oldVersion < 2) {
-        // Upgrade from v1: add viewed_as index to existing store
+        store.createIndex('is_bookmarked', 'is_bookmarked', { unique: false });
+      } else if (oldVersion < 3) {
         const tx = e.target.transaction;
         const store = tx.objectStore(STORE_TWEETS);
         if (!store.indexNames.contains('viewed_as')) {
           store.createIndex('viewed_as', 'viewed_as', { unique: false });
+        }
+        if (!store.indexNames.contains('is_bookmarked')) {
+          store.createIndex('is_bookmarked', 'is_bookmarked', { unique: false });
         }
       }
 
@@ -141,6 +144,27 @@ async function getTweetsByViewingAccount(viewedAs, limit = 100) {
   });
 }
 
+async function getBookmarkedTweets(limit = 100) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_TWEETS, 'readonly');
+    const index = tx.objectStore(STORE_TWEETS).index('is_bookmarked');
+    const results = [];
+    const req = index.openCursor(IDBKeyRange.only(true), 'prev');
+
+    req.onsuccess = (e) => {
+      const cursor = e.target.result;
+      if (cursor && results.length < limit) {
+        results.push(cursor.value);
+        cursor.continue();
+      } else {
+        resolve(results);
+      }
+    };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
 async function getRecentTweets(limit = 50) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
@@ -170,13 +194,11 @@ async function getRecentTweets(limit = 50) {
  * Simple client-side search - works well up to ~50k tweets
  */
 async function searchTweets(query, options = {}) {
-  const { limit = 50, userFilter = null, viewedAsFilter = null, sinceDate = null } = options;
+  const { limit = 50, userFilter = null, viewedAsFilter = null, bookmarkedOnly = false, sinceDate = null } = options;
 
   if (!query || query.trim().length === 0) {
-    // No query: return recent tweets, optionally filtered
-    if (viewedAsFilter) {
-      return getTweetsByViewingAccount(viewedAsFilter, limit);
-    }
+    if (bookmarkedOnly) return getBookmarkedTweets(limit);
+    if (viewedAsFilter) return getTweetsByViewingAccount(viewedAsFilter, limit);
     return getRecentTweets(limit);
   }
 
@@ -189,7 +211,9 @@ async function searchTweets(query, options = {}) {
     const results = [];
 
     let request;
-    if (viewedAsFilter) {
+    if (bookmarkedOnly) {
+      request = store.index('is_bookmarked').openCursor(IDBKeyRange.only(true));
+    } else if (viewedAsFilter) {
       request = store.index('viewed_as').openCursor(IDBKeyRange.only(viewedAsFilter));
     } else if (userFilter) {
       request = store.index('user_screen_name').openCursor(IDBKeyRange.only(userFilter));

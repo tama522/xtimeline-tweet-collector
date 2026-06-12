@@ -15,6 +15,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const btnBack = document.getElementById('btnBack');
   const btnExportJSON = document.getElementById('btnExportJSON');
   const btnExportCSV = document.getElementById('btnExportCSV');
+  const btnFilterAll = document.getElementById('btnFilterAll');
+  const btnFilterBM = document.getElementById('btnFilterBM');
+
+  let bookmarkedOnly = false;
 
   // KPIs
   const kTotal = document.getElementById('kTotal');
@@ -76,6 +80,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     doSearch();
   });
   btnBack.addEventListener('click', showDashboard);
+
+  // Bookmark filter toggle
+  btnFilterAll.addEventListener('click', () => {
+    bookmarkedOnly = false;
+    btnFilterAll.classList.add('active');
+    btnFilterBM.classList.remove('active');
+    doSearch();
+  });
+  btnFilterBM.addEventListener('click', () => {
+    bookmarkedOnly = true;
+    btnFilterBM.classList.add('active');
+    btnFilterAll.classList.remove('active');
+    doSearch();
+  });
 
   // ── Load dashboard ──
   async function loadDashboard() {
@@ -206,6 +224,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         limit: 200,
         viewedAsFilter: viewedAs || null,
         userFilter: user || null,
+        bookmarkedOnly,
       });
 
       const c = results.length === 200 ? '200+' : String(results.length);
@@ -224,6 +243,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const color = randomColor(t.user_screen_name);
         const badges = [];
         if (t.is_retweet) badges.push('<span class="tw-badge tw-badge-rt">RT</span>');
+        if (t.is_bookmarked) badges.push('<span class="tw-badge tw-badge-bm">⭐ BM</span>');
 
         return `
           <div class="tweet-card" data-url="${esc(t.url || '#')}">

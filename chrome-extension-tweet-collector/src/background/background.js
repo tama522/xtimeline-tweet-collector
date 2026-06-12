@@ -95,6 +95,7 @@ async function handleGraphQLResponse(url, endpoint, data) {
     for (const tweet of tweets) {
       tweet.source_endpoint = endpoint;
       tweet.viewed_as = currentViewingAccount || 'unknown';
+      tweet.is_bookmarked = (endpoint === 'Bookmarks' || endpoint === 'BookmarkFolderTimeline');
 
       if (isSeen(tweet)) { duped++; continue; }
 
