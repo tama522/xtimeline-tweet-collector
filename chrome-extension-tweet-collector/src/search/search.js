@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (url && url !== '#') chrome.tabs.create({ url });
         });
       });
-    });
+    }
 
     // Filters
     viewedAsFilter.innerHTML = '<option value="">全アカウント</option>';
