@@ -127,7 +127,7 @@ async function handleGraphQLResponse(url, endpoint, data, viewingAccount) {
     for (const tweet of tweets) {
       tweet.source_endpoint = endpoint;
       tweet.viewed_as = currentViewingAccount || 'unknown';
-      tweet.is_bookmarked = (endpoint === 'Bookmarks' || endpoint === 'BookmarkFolderTimeline');
+      tweet.is_bookmarked = (endpoint === 'Bookmarks' || endpoint === 'BookmarkFolderTimeline') ? 1 : 0;
 
       if (isSeen(tweet)) { duped++; continue; }
 
@@ -354,9 +354,15 @@ async function init() {
 
   dbg('Background initialized. Capture:', captureEnabled);
 
-  // Auto-cleanup: remove old tweets without author info
-  const cleaned = await deleteAnonTweets().catch(() => 0);
-  if (cleaned > 0) dbg(`Cleanup: removed ${cleaned} tweets without author info`);
+  // Reset DB to fix is_bookmarked type issue (boolean → number)
+  try {
+    await clearAll();
+    seenIds.clear();
+    sessionCount = 0;
+    dbg('DB reset: cleared all data for schema migration');
+  } catch (e) {
+    dbg('DB reset error: ' + e.message);
+  }
 }
 
 init();

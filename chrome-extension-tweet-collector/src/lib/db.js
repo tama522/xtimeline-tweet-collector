@@ -150,7 +150,7 @@ async function getBookmarkedTweets(limit = 100) {
     const tx = db.transaction(STORE_TWEETS, 'readonly');
     const index = tx.objectStore(STORE_TWEETS).index('is_bookmarked');
     const results = [];
-    const req = index.openCursor(IDBKeyRange.only(true), 'prev');
+    const req = index.openCursor(IDBKeyRange.only(1), 'prev');
 
     req.onsuccess = (e) => {
       const cursor = e.target.result;
@@ -212,7 +212,7 @@ async function searchTweets(query, options = {}) {
 
     let request;
     if (bookmarkedOnly) {
-      request = store.index('is_bookmarked').openCursor(IDBKeyRange.only(true));
+      request = store.index('is_bookmarked').openCursor(IDBKeyRange.only(1));
     } else if (viewedAsFilter) {
       request = store.index('viewed_as').openCursor(IDBKeyRange.only(viewedAsFilter));
     } else if (userFilter) {
