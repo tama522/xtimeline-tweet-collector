@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const statusDot = document.getElementById('statusDot');
+  const statusBadge = document.getElementById('statusBadge');
   const viewingAccount = document.getElementById('viewingAccount');
   const savedCount = document.getElementById('savedCount');
   const sessionCount = document.getElementById('sessionCount');
@@ -12,27 +12,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnExportJSON = document.getElementById('btnExportJSON');
   const btnExportCSV = document.getElementById('btnExportCSV');
 
-  let isEnabled = true;
+  let enabled = true;
 
-  function refreshStatus() {
-    chrome.runtime.sendMessage({ type: 'GET_STATUS' }, (response) => {
-      if (chrome.runtime.lastError || !response) return;
+  function refresh() {
+    chrome.runtime.sendMessage({ type: 'GET_STATUS' }, (r) => {
+      if (chrome.runtime.lastError || !r) return;
 
-      isEnabled = response.captureEnabled;
-      statusDot.className = 'status-dot' + (isEnabled ? '' : ' off');
+      enabled = r.captureEnabled;
+      statusBadge.textContent = enabled ? 'ON' : 'OFF';
+      statusBadge.className = 'status ' + (enabled ? 'on' : 'off');
 
-      savedCount.textContent = (response.savedCount || 0).toLocaleString();
-      sessionCount.textContent = (response.sessionCount || 0).toLocaleString();
-      viewingAccount.textContent = response.viewingAccount ? '@' + response.viewingAccount : '—';
+      savedCount.textContent = (r.savedCount || 0).toLocaleString();
+      sessionCount.textContent = (r.sessionCount || 0).toLocaleString();
+      viewingAccount.textContent = r.viewingAccount ? '@' + r.viewingAccount : '—';
 
-      btnToggle.textContent = isEnabled ? '⏸ キャプチャを停止' : '▶ キャプチャを開始';
-      btnToggle.className = isEnabled ? 'btn btn-stop' : 'btn btn-primary';
+      btnToggle.textContent = enabled ? '⏸ 停止' : '▶ 開始';
+      btnToggle.className = enabled ? 'btn btn-stop' : 'btn btn-primary';
     });
   }
 
   btnToggle.addEventListener('click', () => {
     chrome.runtime.sendMessage({ type: 'TOGGLE_CAPTURE' }, (r) => {
-      if (r) { isEnabled = r.enabled; refreshStatus(); }
+      if (r) { enabled = r.enabled; refresh(); }
     });
   });
 
@@ -51,5 +52,5 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.runtime.sendMessage({ type: 'EXPORT_CSV' });
   });
 
-  refreshStatus();
+  refresh();
 });

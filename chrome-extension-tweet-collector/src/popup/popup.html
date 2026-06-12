@@ -6,196 +6,161 @@
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
     :root {
-      --bg: #09090b;
-      --surface: #18181b;
-      --surface2: #27272a;
-      --border: #3f3f46;
-      --text: #fafafa;
-      --text2: #a1a1aa;
-      --text3: #71717a;
-      --accent: #6366f1;
-      --accent2: #a855f7;
-      --gradient: linear-gradient(135deg, var(--accent), var(--accent2));
+      --bg: #f8f9fa;
+      --surface: #ffffff;
+      --border: #e9ecef;
+      --border2: #dee2e6;
+      --text: #212529;
+      --text2: #495057;
+      --text3: #868e96;
+      --accent: #4361ee;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      width: 300px;
+      width: 280px;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
+      background: var(--surface);
       color: var(--text);
       padding: 20px;
+      font-size: 13px;
     }
 
-    .header {
+    .top {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
-    .logo-wrap {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .logo-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 12px rgba(99,102,241,0.5);
-    }
-    .logo-name {
-      font-size: 17px;
+    .brand {
+      font-size: 15px;
       font-weight: 700;
+      color: var(--accent);
       letter-spacing: -0.02em;
     }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--accent);
-    }
-    .status-dot.off {
-      background: #f43f5e;
-    }
-
-    .account-bar {
-      background: var(--surface);
-      border: 1px solid var(--border);
+    .status {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
       border-radius: 10px;
-      padding: 12px 14px;
-      margin-bottom: 16px;
+    }
+    .status.on {
+      background: #d3f9d8;
+      color: #2b8a3e;
+    }
+    .status.off {
+      background: #ffe3e3;
+      color: #c92a2a;
+    }
+
+    .account-row {
       display: flex;
       align-items: center;
-      gap: 10px;
-    }
-    .account-bar .label { font-size: 12px; color: var(--text3); }
-    .account-bar .name {
-      font-size: 14px;
-      font-weight: 600;
-      background: var(--gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .account-bar .tag {
-      font-size: 10px;
-      padding: 2px 8px;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
       border-radius: 8px;
-      background: rgba(99,102,241,0.1);
-      color: var(--accent);
-      font-weight: 600;
-      margin-left: auto;
+      margin-bottom: 14px;
     }
+    .account-row .lbl { color: var(--text3); font-size: 12px; }
+    .account-row .val { font-weight: 600; color: var(--accent); }
 
-    .stats-grid {
+    .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 16px;
+      gap: 8px;
+      margin-bottom: 14px;
     }
-    .stat-card {
-      background: var(--surface);
+    .card {
+      background: var(--bg);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 14px;
     }
-    .stat-val {
-      font-size: 26px;
+    .card .num {
+      font-size: 24px;
       font-weight: 700;
-      background: var(--gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--accent);
     }
-    .stat-lbl {
+    .card .lbl {
       font-size: 11px;
       color: var(--text3);
-      margin-top: 4px;
-      font-weight: 500;
+      margin-top: 2px;
     }
 
     .btn {
       display: block;
       width: 100%;
-      padding: 11px;
+      padding: 10px;
       border: none;
-      border-radius: 10px;
-      font-size: 14px;
+      border-radius: 8px;
+      font-size: 13px;
       font-weight: 600;
       font-family: inherit;
       cursor: pointer;
-      text-align: center;
-      transition: all 0.15s;
+      transition: opacity 0.1s;
     }
+    .btn:hover { opacity: 0.9; }
     .btn-primary {
-      background: var(--surface2);
-      color: var(--text);
-      margin-bottom: 8px;
+      background: var(--accent);
+      color: #fff;
+      margin-bottom: 6px;
     }
-    .btn-primary:hover { background: var(--border); }
     .btn-stop {
-      background: rgba(244, 63, 94, 0.12);
-      color: #f43f5e;
-      margin-bottom: 8px;
+      background: #c92a2a;
+      color: #fff;
+      margin-bottom: 6px;
     }
     .btn-search {
-      background: var(--gradient);
-      color: #fff;
-    }
-    .btn-search:hover { opacity: 0.9; }
-
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 12px 0;
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      color: var(--text);
     }
 
-    .links {
+    .footer {
       display: flex;
       justify-content: center;
-      gap: 16px;
+      gap: 14px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
     }
-    .links a {
+    .footer a {
       font-size: 12px;
-      color: var(--text2);
+      color: var(--text3);
       text-decoration: none;
       font-weight: 500;
     }
-    .links a:hover { color: var(--text); }
+    .footer a:hover { color: var(--accent); }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="logo-wrap">
-      <div class="logo-dot" id="statusDot"></div>
-      <span class="logo-name">XTimeline</span>
+  <div class="top">
+    <span class="brand">XTimeline</span>
+    <span class="status on" id="statusBadge">ON</span>
+  </div>
+
+  <div class="account-row">
+    <span class="lbl">閲覧中</span>
+    <span class="val" id="viewingAccount">—</span>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="num" id="savedCount">—</div>
+      <div class="lbl">保存済み</div>
+    </div>
+    <div class="card">
+      <div class="num" id="sessionCount">—</div>
+      <div class="lbl">本セッション</div>
     </div>
   </div>
 
-  <div class="account-bar">
-    <span class="label">閲覧中</span>
-    <span class="name" id="viewingAccount">—</span>
-    <span class="tag">GraphQL</span>
-  </div>
+  <button class="btn btn-stop" id="btnToggle">⏸ 停止</button>
+  <button class="btn btn-search" id="btnSearch">🔍 検索</button>
 
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-val" id="savedCount">—</div>
-      <div class="stat-lbl">保存済み</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val" id="sessionCount">—</div>
-      <div class="stat-lbl">本セッション</div>
-    </div>
-  </div>
-
-  <button class="btn btn-stop" id="btnToggle">キャプチャを停止</button>
-  <button class="btn btn-search" id="btnSearch">🔍 検索ページを開く</button>
-
-  <div class="divider"></div>
-
-  <div class="links">
+  <div class="footer">
     <a href="#" id="btnExportJSON">JSON</a>
     <a href="#" id="btnExportCSV">CSV</a>
     <a href="../options/options.html" target="_blank">設定</a>
