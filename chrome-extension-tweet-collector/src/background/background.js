@@ -287,3 +287,12 @@ setInterval(flushWebhook, 15000);
 setInterval(() => {
   chrome.storage.local.set({ seenIds: [...seenIds] });
 }, 30000);
+
+// Keep service worker alive with alarms
+chrome.alarms.create('keepalive', { periodInMinutes: 0.4 }); // ~25 seconds
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'keepalive') {
+    // Just keeping the SW alive. Do periodic work.
+    flushWebhook();
+  }
+});

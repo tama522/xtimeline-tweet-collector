@@ -10,7 +10,8 @@
     "activeTab",
     "tabs",
     "downloads",
-    "unlimitedStorage"
+    "unlimitedStorage",
+    "alarms"
   ],
 
   "host_permissions": [
