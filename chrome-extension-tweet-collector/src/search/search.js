@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   // DOM refs
   const searchInput = document.getElementById('searchInput');
   const viewedAsFilter = document.getElementById('viewedAsFilter');
-  const userFilter = document.getElementById('userFilter');
   const dashboardView = document.getElementById('dashboardView');
   const resultsView = document.getElementById('resultsView');
   const tweetList = document.getElementById('tweetList');
@@ -151,7 +150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       topAuthors.querySelectorAll('.author-row').forEach(r => {
         r.style.cursor = 'pointer';
         r.addEventListener('click', () => {
-          userFilter.value = r.dataset.user;
+          searchInput.value = '@' + r.dataset.user;
           doSearch();
         });
       });
@@ -191,19 +190,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       o.value = a.account; o.textContent = `@${a.account} (${a.tweet_count})`;
       viewedAsFilter.appendChild(o);
     });
-    userFilter.innerHTML = '<option value="">全ユーザー</option>';
-    users.forEach(u => {
-      const o = document.createElement('option');
-      o.value = u.screen_name; o.textContent = `@${u.screen_name} (${u.tweet_count})`;
-      userFilter.appendChild(o);
-    });
   }
 
   // ── Search ──
   async function doSearch() {
     const query = searchInput.value.trim();
     const viewedAs = viewedAsFilter.value;
-    const user = userFilter.value;
 
     showResults();
     resultsInfo.textContent = '検索中…';
@@ -212,7 +204,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const results = await searchTweets(query, {
         limit: 200,
         viewedAsFilter: viewedAs || null,
-        userFilter: user || null,
         bookmarkedOnly,
       });
 
@@ -289,8 +280,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let debounce;
   searchInput.addEventListener('input', () => { clearTimeout(debounce); debounce = setTimeout(doSearch, 300); });
-  viewedAsFilter.addEventListener('change', () => { if (resultsView.style.display !== 'none') doSearch(); else { doSearch(); } });
-  userFilter.addEventListener('change', () => { if (resultsView.style.display !== 'none') doSearch(); else { doSearch(); } });
+  viewedAsFilter.addEventListener('change', () => { doSearch(); });
 
   // Export (buttons may not exist in current UI)
   if (btnExportJSON) btnExportJSON.addEventListener('click', async () => {
