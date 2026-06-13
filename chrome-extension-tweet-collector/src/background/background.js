@@ -131,13 +131,14 @@ async function handleGraphQLResponse(url, endpoint, data, viewingAccount) {
 
       if (isSeen(tweet)) { duped++; continue; }
 
-      // If tweet already in DB, update engagement metrics
+      // If tweet already in DB, update engagement metrics (keep original collected_at)
       const existing = await getTweet(tweet.id);
       if (existing) {
         existing.retweet_count = tweet.retweet_count;
         existing.favorite_count = tweet.favorite_count;
         existing.reply_count = tweet.reply_count;
         existing.translation = tweet.translation || existing.translation;
+        // Do NOT update collected_at — preserves incremental backup logic
         await putTweet(existing);
         markSeen(tweet);
         duped++;
@@ -375,6 +376,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // Get last backup time
         const stored = await new Promise(r => chrome.storage.local.get(['lastBackupTime'], r));
         const since = stored.lastBackupTime || '2000-01-01T00:00:00.000Z';
+        const backupStartTime = new Date().toISOString(); // Record before export
         const tweets = await getTweetsSince(since);
 
         if (tweets.length === 0) {
@@ -389,23 +391,30 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           groups[d].push(t);
         }
 
-        // Export each date group
+        // Export each date group — stop on error
+        let exportedDates = 0;
         for (const [dateKey, dateTweets] of Object.entries(groups)) {
           const json = JSON.stringify(dateTweets, null, 2);
           const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
-          await chrome.downloads.download({
-            url: dataUrl,
-            filename: `xtimeline-backup/update_${dateKey}.json`,
-            conflictAction: 'uniquify',
-            saveAs: false
-          });
+          try {
+            await chrome.downloads.download({
+              url: dataUrl,
+              filename: `xtimeline-backup/update_${dateKey}.json`,
+              conflictAction: 'uniquify',
+              saveAs: false
+            });
+            exportedDates++;
+          } catch (err) {
+            dbg('Export download error: ' + err.message);
+            // Stop exporting, don't update lastBackupTime
+            return { exported: 0, error: 'DL失敗: ' + err.message };
+          }
         }
 
-        // Update last backup time
-        const now = new Date().toISOString();
-        await new Promise(r => chrome.storage.local.set({ lastBackupTime: now }, r));
+        // Only update lastBackupTime after all downloads succeed
+        await new Promise(r => chrome.storage.local.set({ lastBackupTime: backupStartTime }, r));
 
-        return { exported: tweets.length, dates: Object.keys(groups).length };
+        return { exported: tweets.length, dates: exportedDates };
       }
 
       case 'GET_LAST_BACKUP': {
