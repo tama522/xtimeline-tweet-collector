@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6c5ce7"/>
+      <stop offset="1" stop-color="#a855f7"/>
+    </linearGradient>
+  </defs>
+  <!-- Rounded square background -->
+  <rect width="128" height="128" rx="28" fill="url(#g)"/>
+  <!-- Shield/vault shape -->
+  <path d="M64 20 L96 36 L96 68 C96 90 64 108 64 108 C64 108 32 90 32 68 L32 36 Z" fill="none" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+  <!-- Timeline lines inside shield -->
+  <line x1="48" y1="52" x2="80" y2="52" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+  <line x1="48" y1="66" x2="72" y2="66" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+  <line x1="48" y1="80" x2="64" y2="80" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity="0.4"/>
+  <!-- Dot indicators -->
+  <circle cx="42" cy="52" r="3" fill="#fff"/>
+  <circle cx="42" cy="66" r="3" fill="#fff" opacity="0.7"/>
+  <circle cx="42" cy="80" r="3" fill="#fff" opacity="0.4"/>
+</svg>
