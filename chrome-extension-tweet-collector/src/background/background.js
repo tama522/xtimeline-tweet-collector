@@ -391,30 +391,34 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           groups[d].push(t);
         }
 
-        // Export each date group — stop on error
-        let exportedDates = 0;
-        for (const [dateKey, dateTweets] of Object.entries(groups)) {
-          const json = JSON.stringify(dateTweets, null, 2);
-          const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
-          try {
-            await chrome.downloads.download({
-              url: dataUrl,
-              filename: `xtimeline-backup/update_${dateKey}.json`,
-              conflictAction: 'uniquify',
-              saveAs: false
-            });
-            exportedDates++;
-          } catch (err) {
-            dbg('Export download error: ' + err.message);
-            // Stop exporting, don't update lastBackupTime
-            return { exported: 0, error: 'DL失敗: ' + err.message };
-          }
+        // Export all tweets in one file with download timestamp
+        const now = new Date();
+        const ts = now.getFullYear()
+          + String(now.getMonth() + 1).padStart(2, '0')
+          + String(now.getDate()).padStart(2, '0')
+          + '_'
+          + String(now.getHours()).padStart(2, '0')
+          + String(now.getMinutes()).padStart(2, '0')
+          + String(now.getSeconds()).padStart(2, '0');
+
+        const json = JSON.stringify(tweets, null, 2);
+        const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+        try {
+          await chrome.downloads.download({
+            url: dataUrl,
+            filename: `xtimeline-backup/update_${ts}.json`,
+            conflictAction: 'uniquify',
+            saveAs: false
+          });
+        } catch (err) {
+          dbg('Export download error: ' + err.message);
+          return { exported: 0, error: 'DL失敗: ' + err.message };
         }
 
         // Only update lastBackupTime after all downloads succeed
         await new Promise(r => chrome.storage.local.set({ lastBackupTime: backupStartTime }, r));
 
-        return { exported: tweets.length, dates: exportedDates };
+        return { exported: tweets.length };
       }
 
       case 'GET_LAST_BACKUP': {
