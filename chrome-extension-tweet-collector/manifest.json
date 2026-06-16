@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "XTimeline Tweet Collector",
-  "version": "3.0.0",
-  "description": "X/Twitterのタイムラインツイートを自動キャプチャ。GraphQLレスポンスを横取りしてローカルIndexedDBに保存。全文検索・エクスポート対応。",
+  "name": "Timeline Vault",
+  "version": "3.1.0",
+  "description": "Capture and archive timeline posts locally. Full-text search, incremental backup, and scheduled export. Privacy-first, no cloud.",
   "author": "tama522",
 
   "permissions": [
@@ -40,7 +40,7 @@
 
   "action": {
     "default_popup": "src/popup/popup.html",
-    "default_title": "XTimeline Tweet Collector",
+    "default_title": "Timeline Vault",
     "default_icon": {
       "16": "assets/icons/icon16.png",
       "32": "assets/icons/icon32.png",
