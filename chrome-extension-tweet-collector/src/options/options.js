@@ -14,6 +14,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     webhookUrl: document.getElementById('webhookUrl'),
     dataRetentionDays: document.getElementById('dataRetentionDays'),
     saveMedia: document.getElementById('saveMedia'),
+    dailyBackupEnabled: document.getElementById('dailyBackupEnabled'),
+    dailyBackupSettings: document.getElementById('dailyBackupSettings'),
+    dailyBackupHour: document.getElementById('dailyBackupHour'),
+    dailyBackupMinute: document.getElementById('dailyBackupMinute'),
     debugMode: document.getElementById('debugMode'),
     btnSave: document.getElementById('btnSave'),
     btnClearData: document.getElementById('btnClearData'),
@@ -36,6 +40,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     elements.statusMsg.className = 'status-msg show ' + type;
     setTimeout(() => { elements.statusMsg.className = 'status-msg'; }, 3000);
   }
+
+  // Populate hour/minute dropdowns
+  for (let h = 0; h < 24; h++) {
+    const o = document.createElement('option');
+    o.value = h; o.textContent = String(h).padStart(2, '0');
+    elements.dailyBackupHour.appendChild(o);
+  }
+  for (let m = 0; m < 60; m += 5) {
+    const o = document.createElement('option');
+    o.value = m; o.textContent = String(m).padStart(2, '0');
+    elements.dailyBackupMinute.appendChild(o);
+  }
+
+  // Toggle daily backup settings visibility
+  elements.dailyBackupEnabled.addEventListener('change', () => {
+    elements.dailyBackupSettings.style.display = elements.dailyBackupEnabled.checked ? '' : 'none';
+  });
 
   function renderAccounts() {
     if (knownAccounts.length === 0) {
@@ -76,6 +97,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         elements.webhookUrl.value = settings.webhookUrl || '';
         elements.dataRetentionDays.value = String(settings.dataRetentionDays || 0);
         elements.saveMedia.checked = settings.saveMedia || false;
+        elements.dailyBackupEnabled.checked = settings.dailyBackupEnabled || false;
+        elements.dailyBackupSettings.style.display = settings.dailyBackupEnabled ? '' : 'none';
+        elements.dailyBackupHour.value = String(settings.dailyBackupHour ?? 3);
+        elements.dailyBackupMinute.value = String(settings.dailyBackupMinute ?? 0);
         elements.debugMode.checked = settings.debugMode || false;
         resolve(settings);
       });
@@ -111,6 +136,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       webhookUrl: elements.webhookUrl.value.trim(),
       dataRetentionDays: parseInt(elements.dataRetentionDays.value, 10),
       saveMedia: elements.saveMedia.checked,
+      dailyBackupEnabled: elements.dailyBackupEnabled.checked,
+      dailyBackupHour: parseInt(elements.dailyBackupHour.value, 10),
+      dailyBackupMinute: parseInt(elements.dailyBackupMinute.value, 10),
       debugMode: elements.debugMode.checked
     };
 

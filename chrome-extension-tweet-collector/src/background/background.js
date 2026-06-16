@@ -32,6 +32,9 @@ const DEFAULT_SETTINGS = {
   webhookEnabled: false,
   dataRetentionDays: 0,
   saveMedia: false,
+  dailyBackupEnabled: false,
+  dailyBackupHour: 3,
+  dailyBackupMinute: 0,
   debugMode: false
 };
 
@@ -320,6 +323,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       case 'SAVE_SETTINGS':
         await saveSettings(request.settings);
+        await scheduleDailyBackup(); // Reschedule alarm
         return { success: true };
 
       case 'DELETE_OLD':
@@ -463,6 +467,9 @@ async function init() {
   }
 
   dbg('Background initialized. Capture:', captureEnabled);
+
+  // Schedule daily backup alarm
+  await scheduleDailyBackup();
 }
 
 init();
@@ -470,6 +477,78 @@ setInterval(flushWebhook, 15000);
 setInterval(() => {
   chrome.storage.local.set({ seenIds: [...seenIds] });
 }, 30000);
+
+// --- Daily backup alarm ---
+async function scheduleDailyBackup() {
+  const settings = await getSettings();
+
+  // Clear existing alarm
+  await chrome.alarms.clear('dailyBackup');
+
+  if (!settings.dailyBackupEnabled) {
+    dbg('Daily backup: disabled');
+    return;
+  }
+
+  const hour = settings.dailyBackupHour ?? 3;
+  const minute = settings.dailyBackupMinute ?? 0;
+
+  // Calculate next alarm time
+  const now = new Date();
+  const next = new Date();
+  next.setHours(hour, minute, 0, 0);
+
+  // If the time has already passed today, schedule for tomorrow
+  if (next <= now) {
+    next.setDate(next.getDate() + 1);
+  }
+
+  chrome.alarms.create('dailyBackup', { when: next.getTime() });
+  dbg(`Daily backup scheduled: ${next.toLocaleString('ja-JP')}`);
+}
+
+// Listen for alarm
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+  if (alarm.name === 'dailyBackup') {
+    dbg('Daily backup alarm fired');
+
+    // Run incremental export
+    const stored = await new Promise(r => chrome.storage.local.get(['lastBackupTime'], r));
+    const since = stored.lastBackupTime || '2000-01-01T00:00:00.000Z';
+    const backupStartTime = new Date().toISOString();
+    const tweets = await getTweetsSince(since);
+
+    if (tweets.length === 0) {
+      dbg('Daily backup: no new tweets');
+    } else {
+      const now = new Date();
+      const ts = now.getFullYear()
+        + String(now.getMonth() + 1).padStart(2, '0')
+        + String(now.getDate()).padStart(2, '0')
+        + '_'
+        + String(now.getHours()).padStart(2, '0')
+        + String(now.getMinutes()).padStart(2, '0');
+
+      const json = JSON.stringify(tweets, null, 2);
+      const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+      try {
+        await chrome.downloads.download({
+          url: dataUrl,
+          filename: `xtimeline-backup/daily_${ts}.json`,
+          conflictAction: 'uniquify',
+          saveAs: false
+        });
+        await new Promise(r => chrome.storage.local.set({ lastBackupTime: backupStartTime }, r));
+        dbg(`Daily backup: ${tweets.length} tweets exported`);
+      } catch (err) {
+        dbg('Daily backup error: ' + err.message);
+      }
+    }
+
+    // Schedule next alarm (tomorrow)
+    scheduleDailyBackup();
+  }
+});
 
 // Keep service worker alive with alarms
 chrome.alarms.create('keepalive', { periodInMinutes: 0.4 }); // ~25 seconds

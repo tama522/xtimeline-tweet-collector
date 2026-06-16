@@ -200,7 +200,7 @@
         <input type="text" id="webhookUrl" placeholder="https://your-api.example.com/webhook/tweets">
       </div>
     </div>
-
+    <!-- Backup -->
     <div class="section">
       <h2>💾 データ管理</h2>
       <div class="storage-info" id="storageInfo">読み込み中…</div>
@@ -220,8 +220,27 @@
         <div class="toggle"><input type="checkbox" id="saveMedia"><span class="slider"></span></div>
       </div>
 
-      <div class="form-group" style="margin-top:12px">
-        <label>バックアップ</label>
+      <!-- Daily backup -->
+      <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+        <div class="toggle-row">
+          <label>毎日自動バックアップ</label>
+          <div class="toggle"><input type="checkbox" id="dailyBackupEnabled"><span class="slider"></span></div>
+        </div>
+        <div id="dailyBackupSettings" style="display:none">
+          <div class="form-group" style="margin-top:8px">
+            <label>バックアップ時刻</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="dailyBackupHour" style="padding:6px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-size:14px"></select>
+              <span>:</span>
+              <select id="dailyBackupMinute" style="padding:6px;border:1px solid var(--border2);border-radius:6px;background:var(--surface);font-size:14px"></select>
+            </div>
+            <div class="hint">毎日この時刻に前回バックアップからの差分を自動保存します</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manual backup -->
+      <div style="margin-top:12px">
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <button class="btn btn-primary btn-sm" id="btnExportIncremental">🔄 更新分を保存</button>
           <span class="hint" id="lastBackupInfo">最終バックアップ: 未実行</span>
